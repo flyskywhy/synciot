@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.silan.iot.nettestmachine.R;
+
 public class MainMenu extends Activity {
 
     /** Called when the activity is first created. */
@@ -64,7 +66,7 @@ public class MainMenu extends Activity {
 			public void onClick(View v) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(MainMenu.this);
 				builder.setTitle("About");
-				builder.setMessage(R.string.about_msg);
+//				builder.setMessage(R.string.about_msg);
 				builder.show();
 			}
 		});

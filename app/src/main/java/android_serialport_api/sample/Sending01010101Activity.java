@@ -21,6 +21,8 @@ import java.util.Arrays;
 
 import android.os.Bundle;
 
+import com.silan.iot.nettestmachine.R;
+
 public class Sending01010101Activity extends SerialPortActivity {
 
 	SendingThread mSendingThread;

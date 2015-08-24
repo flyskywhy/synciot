@@ -26,6 +26,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
+
+import com.silan.iot.nettestmachine.R;
+
 import android_serialport_api.SerialPort;
 
 public abstract class SerialPortActivity extends Activity {

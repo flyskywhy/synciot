@@ -21,6 +21,9 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
+
+import com.silan.iot.nettestmachine.R;
+
 import android_serialport_api.SerialPortFinder;
 
 public class SerialPortPreferences extends PreferenceActivity {
