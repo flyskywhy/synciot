@@ -6,6 +6,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:name="android_serialport_api.sample.Application"
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
@@ -15,6 +16,16 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name="android_serialport_api.sample.MainMenu" >
+        </activity>
+        <activity android:name="android_serialport_api.sample.SerialPortPreferences" >
+        </activity>
+        <activity android:name="android_serialport_api.sample.ConsoleActivity" >
+        </activity>
+        <activity android:name="android_serialport_api.sample.LoopbackActivity" >
+        </activity>
+        <activity android:name="android_serialport_api.sample.Sending01010101Activity">
         </activity>
     </application>
 
