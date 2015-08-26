@@ -33,7 +33,7 @@ public class Application extends android.app.Application {
 	public SerialPort getSerialPort() throws SecurityException, IOException, InvalidParameterException {
 		if (mSerialPort == null) {
 			/* Read serial port parameters */
-			SharedPreferences sp = getSharedPreferences("android_serialport_api.sample_preferences", MODE_PRIVATE);
+			SharedPreferences sp = getSharedPreferences(getPackageName() + "_preferences", MODE_PRIVATE);
 			String path = sp.getString("DEVICE", "");
 			int baudrate = Integer.decode(sp.getString("BAUDRATE", "-1"));
 
