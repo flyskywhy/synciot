@@ -6,7 +6,7 @@ model {
         buildToolsVersion = "21.1.1"
 
         defaultConfig.with {
-            applicationId = "com.silan.iot.nettestmachine"
+            applicationId = "com.silan.iot.networkingtestmachine"
             minSdkVersion.apiLevel = 15
             targetSdkVersion.apiLevel = 21
             versionCode = 2

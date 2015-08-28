@@ -24,7 +24,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-import com.silan.iot.nettestmachine.R;
+import com.silan.iot.networkingtestmachine.R;
 
 public class ConsoleActivity extends SerialPortActivity {
 

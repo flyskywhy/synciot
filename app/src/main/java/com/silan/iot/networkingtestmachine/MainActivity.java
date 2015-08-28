@@ -1,4 +1,4 @@
-package com.silan.iot.nettestmachine;
+package com.silan.iot.networkingtestmachine;
 
 import java.util.Locale;
 

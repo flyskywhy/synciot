@@ -21,7 +21,7 @@ import java.io.IOException;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import com.silan.iot.nettestmachine.R;
+import com.silan.iot.networkingtestmachine.R;
 
 public class LoopbackActivity extends SerialPortActivity {
 

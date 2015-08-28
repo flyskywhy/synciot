@@ -1,4 +1,4 @@
-package com.silan.iot.nettestmachine;
+package com.silan.iot.networkingtestmachine;
 
 import android.app.AlertDialog;
 import android.content.Intent;

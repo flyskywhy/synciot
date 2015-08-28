@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.silan.iot.nettestmachine.R;
+import com.silan.iot.networkingtestmachine.R;
 
 public class MainMenu extends Activity {
 
