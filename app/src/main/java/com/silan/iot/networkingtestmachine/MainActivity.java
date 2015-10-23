@@ -40,6 +40,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (ShellInterface.isSuAvailable()) {
+            ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
+            ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
+            ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
+        }
+
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
