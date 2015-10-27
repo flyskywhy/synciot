@@ -13,6 +13,17 @@ Linux 平台：
 
     ~/.android/debug.keystore
 
+## ROOT
+
+本 App 需要进行 mount 操作，而 mount 操作是需要 ROOT 权限的，因此运行本 APP 前需要先进行 ROOT 操作。
+
+从 [Supperuser 官网](http://androidsu.com/superuser/)下载 superuser.zip 文件，解压缩以后进行如下操作：
+
+    adb remount
+    adb push Superuser.apk /system/app/
+    adb push su /system/xbin/su
+    adb shell chmod 06755 /system/xbin/su
+
 ## 注意事项
 由于 Android Studio 自身的 Bug ，如果在操作串口时发生 APP 闪退，且在 logcat 中看到`java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "tcgetattr"`这样的出错信息，则说明碰到了[http://stackoverflow.com/questions/28740315/android-ndk-getting-java-lang-unsatisfiedlinkerror-dlopen-failed-cannot-loca](http://stackoverflow.com/questions/28740315/android-ndk-getting-java-lang-unsatisfiedlinkerror-dlopen-failed-cannot-loca)这样的 Bug 。在该 Bug 未修复前，可用如下方法绕过去：
 
