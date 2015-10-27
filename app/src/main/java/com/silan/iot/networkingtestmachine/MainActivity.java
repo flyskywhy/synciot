@@ -1,6 +1,8 @@
 package com.silan.iot.networkingtestmachine;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
@@ -41,9 +43,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         setContentView(R.layout.activity_main);
 
         if (ShellInterface.isSuAvailable()) {
-            ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
-            ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
-            ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
+            Pattern RAMFS_PATTERN = Pattern.compile("ramfs ramfs");
+            String out = ShellInterface.getProcessOutput("mount");
+            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            if (! matcher.find()) {
+                ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
+                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
+                ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
+            }
         }
 
         // Set up the action bar.
