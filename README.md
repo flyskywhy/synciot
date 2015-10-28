@@ -17,7 +17,7 @@ Linux 平台：
 
 本 App 需要进行 mount 操作，而 mount 操作是需要 ROOT 权限的，因此运行本 APP 前需要先进行 ROOT 操作。
 
-从 [Supperuser 官网](http://androidsu.com/superuser/)下载 superuser.zip 文件，解压缩以后进行如下操作：
+从 [Supperuser 官网](http://koush.com/post/superuser)下载 superuser.zip 文件，解压缩以后进行如下操作：
 
     adb remount
     adb push Superuser.apk /system/app/
