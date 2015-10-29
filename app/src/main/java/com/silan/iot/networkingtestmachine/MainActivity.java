@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
 
@@ -51,6 +53,16 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
                 ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
             }
+        }
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid");
+        if (intent == null) {
+            intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid.debug");
+        }
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(getApplicationContext(), "Please install syncthing-android first", Toast.LENGTH_LONG).show();
         }
 
         // Set up the action bar.
