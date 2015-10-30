@@ -44,26 +44,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile("ramfs ramfs");
-            String out = ShellInterface.getProcessOutput("mount");
-            Matcher matcher = RAMFS_PATTERN.matcher(out);
-            if (! matcher.find()) {
-                ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
-                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
-                ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
-            }
-        }
-
-        Intent intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid");
-        if (intent == null) {
-            intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid.debug");
-        }
-        if (intent != null) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(getApplicationContext(), "Please install syncthing-android first", Toast.LENGTH_LONG).show();
-        }
+        startSyncthing();
 
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
@@ -97,6 +78,29 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                     actionBar.newTab()
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
+        }
+    }
+
+    private void startSyncthing() {
+        if (ShellInterface.isSuAvailable()) {
+            Pattern RAMFS_PATTERN = Pattern.compile("ramfs ramfs");
+            String out = ShellInterface.getProcessOutput("mount");
+            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            if (! matcher.find()) {
+                ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
+                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
+                ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
+            }
+        }
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid");
+        if (intent == null) {
+            intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid.debug");
+        }
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(getApplicationContext(), "Please install syncthing-android first", Toast.LENGTH_LONG).show();
         }
     }
 
