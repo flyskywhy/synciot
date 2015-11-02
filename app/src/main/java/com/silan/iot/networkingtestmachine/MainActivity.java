@@ -1,26 +1,27 @@
 package com.silan.iot.networkingtestmachine;
 
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
+import android.content.res.AssetManager;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.view.Gravity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
 
@@ -82,25 +83,51 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     private void startSyncthing() {
-        if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile("ramfs ramfs");
-            String out = ShellInterface.getProcessOutput("mount");
-            Matcher matcher = RAMFS_PATTERN.matcher(out);
-            if (! matcher.find()) {
-                ShellInterface.runCommand("mkdir -p /sdcard/ramfs/");
-                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/ramfs/");
-                ShellInterface.runCommand("touch /sdcard/ramfs/.stfolder");
+        String syncthingPath = "/data/data/" + getApplicationContext().getPackageName() + "/syncthing";
+        File file = new File(syncthingPath);
+        if (!file.exists()) {
+            try {
+                AssetManager am = getApplicationContext().getAssets();
+                InputStream is;
+                is = am.open("syncthing");
+                FileOutputStream out = new FileOutputStream(syncthingPath);
+                byte[] buffer = new byte[1024 * 64];
+                int read = is.read(buffer);
+
+                while (read >= 0) {
+                    out.write(buffer, 0, read);
+                    read = is.read(buffer);
+                }
+
+                out.close();
+
+                ShellInterface.runCommand("chmod 755 " + syncthingPath);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
-        Intent intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid");
-        if (intent == null) {
-            intent = getPackageManager().getLaunchIntentForPackage("com.nutomic.syncthingandroid.debug");
+        file = new File("/sdcard/iot/Sync");
+        if (!file.exists() && !file.isDirectory()) {
+            file.mkdir();
         }
-        if (intent != null) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(getApplicationContext(), "Please install syncthing-android first", Toast.LENGTH_LONG).show();
+
+        if (ShellInterface.isSuAvailable()) {
+            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp ramfs");
+            String out = ShellInterface.getProcessOutput("mount");
+            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            if (!matcher.find()) {
+                ShellInterface.runCommand("mkdir -p /sdcard/iot/SyncTemp/");
+                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/iot/SyncTemp/");
+                ShellInterface.runCommand("touch /sdcard/iot/SyncTemp/.stfolder");
+            }
+        }
+
+        file = new File("/sdcard/iot/sync-config/config.xml");
+        if (!file.exists()) {
+            ShellInterface.runCommand("mkdir -p /sdcard/iot/sync-config/");
+            ShellInterface.runCommand(syncthingPath + " -generate=/sdcard/iot/sync-config/");
         }
     }
 
