@@ -30,4 +30,5 @@ model {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'org.unix4j:unix4j-command:0.3'
 }
