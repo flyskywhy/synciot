@@ -17,15 +17,113 @@ import java.util.regex.Pattern;
  * Created by lizheng on 15-11-4.
  */
 public class Syncthing {
+
+    private static Context CallerCtx;
+
+    private static String dataPath;
+    private static final String SYNC_PATH = "/sdcard/iot/Sync";
+    private static final String SYNC_PATH_SED = "\\/sdcard\\/iot\\/Sync";
+    private static final String SYNC_TEMP_PATH = "/sdcard/iot/SyncTemp";
+    private static final String SYNCTHING_CONFIG_PATH = "/sdcard/iot/sync-config";
+
+    private static final String ASSETS_SYNCTHING = "syncthing";
+    private static String syncthing;
+    private static final String CONFIG_XML = SYNCTHING_CONFIG_PATH + "/config.xml";
+    private static String device_id;
+    private static String device_id_short;
+
+    public static String getDevice_id() {
+        return device_id;
+    }
+
+    public static String getDevice_id_short() {
+        return device_id_short;
+    }
+
     public static void startSyncthing(Context ctx) {
-        String syncthingPath = "/data/data/" + ctx.getApplicationContext().getPackageName() + "/syncthing";
-        File file = new File(syncthingPath);
+        CallerCtx = ctx;
+        dataPath = "/data/data/" + CallerCtx.getApplicationContext().getPackageName();
+        syncthing = dataPath + "/" + ASSETS_SYNCTHING;
+        File file = new File(syncthing);
+        if (!file.exists()) {
+            extractAssets(CallerCtx, ASSETS_SYNCTHING, syncthing);
+            ShellInterface.runCommand("chmod 755 " + syncthing);
+        }
+
+        mkdirSync();
+        mkdirSyncTemp();
+        generateConfigXml();
+
+        device_id = Unix4j.fromFile(CONFIG_XML)
+                .grep("^        <device id=")
+                .sed("s/^.*id=\"//")
+                .sed("s/\">.*//")
+                .toStringResult();
+
+        device_id_short = Unix4j.fromString(device_id)
+                .sed("s/-.*//")
+                .toStringResult();
+
+        if (isOriginConfigXml()) {
+            sedMisc2ConfigXml();
+            sedSync2ConfigXml();
+        }
+    }
+
+    private static void sedSync2ConfigXml() {
+        Unix4j.fromFile(CONFIG_XML)
+                .sed("s/id=\"default\" path=\"\\/data\\/Sync\"/id=\"" + device_id_short + "\" path=\"" + SYNC_PATH_SED + "\"/")
+                .toFile(CONFIG_XML + ".tmp");
+        ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
+    }
+
+    private static void sedMisc2ConfigXml() {
+        Unix4j.fromFile(CONFIG_XML)
+                .sed("s/urAccepted>0/urAccepted>-1/")
+                .toFile(CONFIG_XML + ".tmp");
+        ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
+    }
+
+    private static boolean isOriginConfigXml() {
+        return "0" != Unix4j.fromFile(CONFIG_XML).grep(GrepOption.count, "\"\\/data\\/Sync\"").toStringResult();
+    }
+
+    private static void generateConfigXml() {
+        File file = new File(CONFIG_XML);
+        if (!file.exists()) {
+            ShellInterface.runCommand("mkdir -p " + SYNCTHING_CONFIG_PATH + "/");
+            ShellInterface.runCommand(syncthing + " -generate=" + SYNCTHING_CONFIG_PATH + "/");
+        }
+    }
+
+    private static void mkdirSyncTemp() {
+        if (ShellInterface.isSuAvailable()) {
+            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp ramfs");
+            String out = ShellInterface.getProcessOutput("mount");
+            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            if (!matcher.find()) {
+                ShellInterface.runCommand("mkdir -p " + SYNC_TEMP_PATH + "/");
+                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none " + SYNC_TEMP_PATH + "/");
+                ShellInterface.runCommand("touch " + SYNC_TEMP_PATH + "/.stfolder");
+            }
+        }
+    }
+
+    private static void mkdirSync() {
+        File file = new File(SYNC_PATH);
+        if (!file.exists() && !file.isDirectory()) {
+            file.mkdir();
+        }
+    }
+
+    private static void extractAssets(Context ctx, String assets, String path) {
+        File file = new File(path);
         if (!file.exists()) {
             try {
                 AssetManager am = ctx.getApplicationContext().getAssets();
                 InputStream is;
-                is = am.open("syncthing");
-                FileOutputStream out = new FileOutputStream(syncthingPath);
+                is = am.open(assets);
+                FileOutputStream out = new FileOutputStream(path);
                 byte[] buffer = new byte[1024 * 64];
                 int read = is.read(buffer);
 
@@ -35,53 +133,9 @@ public class Syncthing {
                 }
 
                 out.close();
-
-                ShellInterface.runCommand("chmod 755 " + syncthingPath);
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-
-        file = new File("/sdcard/iot/Sync");
-        if (!file.exists() && !file.isDirectory()) {
-            file.mkdir();
-        }
-
-        if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp ramfs");
-            String out = ShellInterface.getProcessOutput("mount");
-            Matcher matcher = RAMFS_PATTERN.matcher(out);
-            if (!matcher.find()) {
-                ShellInterface.runCommand("mkdir -p /sdcard/iot/SyncTemp/");
-                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none /sdcard/iot/SyncTemp/");
-                ShellInterface.runCommand("touch /sdcard/iot/SyncTemp/.stfolder");
-            }
-        }
-
-        final String config_xml = "/sdcard/iot/sync-config/config.xml";
-        file = new File(config_xml);
-        if (!file.exists()) {
-            ShellInterface.runCommand("mkdir -p /sdcard/iot/sync-config/");
-            ShellInterface.runCommand(syncthingPath + " -generate=/sdcard/iot/sync-config/");
-        }
-
-        String device_id = Unix4j.fromFile(config_xml)
-                .grep("^        <device id=")
-                .sed("s/^.*id=\"//")
-                .sed("s/\">.*//")
-                .toStringResult();
-
-        String device_id_short = Unix4j.fromString(device_id)
-                .sed("s/-.*//")
-                .toStringResult();
-
-        if ("0" != Unix4j.fromFile(config_xml).grep(GrepOption.count, "\"\\/data\\/Sync\"").toStringResult()) {
-            Unix4j.fromFile(config_xml)
-                    .sed("s/id=\"default\" path=\"\\/data\\/Sync\"/id=\"" + device_id_short + "\" path=\"\\/sdcard\\/iot\\/Sync\"/")
-                    .sed("s/urAccepted>0/urAccepted>-1/")
-                    .toFile(config_xml + ".tmp");
-            ShellInterface.runCommand("mv " + config_xml + ".tmp " + config_xml);
         }
     }
 }
