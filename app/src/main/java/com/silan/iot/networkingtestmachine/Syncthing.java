@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 
 import org.unix4j.Unix4j;
 import org.unix4j.unix.grep.GrepOption;
+import org.unix4j.unix.sed.SedOption;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +29,34 @@ public class Syncthing {
 
     private static final String ASSETS_SYNCTHING = "syncthing";
     private static String syncthing;
+    private static final String ASSETS_SERVER_DEVICE_ID_TXT = "server_device_id.txt";
+    private static final String SERVER_DEVICE_ID_TXT = SYNCTHING_CONFIG_PATH + "/" + ASSETS_SERVER_DEVICE_ID_TXT;
     private static final String CONFIG_XML = SYNCTHING_CONFIG_PATH + "/config.xml";
+
+    private static String server_device_id;
+    private static final String SERVER_DEFAULT_FOLDER_DEVICE = new StringBuilder()
+            .append("        <device id=\"SERVER_DEVICE_ID\"></device>")
+            .toString();
+    private static final String SERVER_EXTRA_FOLDER_DEVICE = new StringBuilder()
+            .append("    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"false\">\n")
+            .append("        <device id=\"CLIENT_DEVICE_ID\"></device>\n")
+            .append("        <device id=\"SERVER_DEVICE_ID\"></device>\n")
+            .append("        <minDiskFreePct>1</minDiskFreePct>\n")
+            .append("        <versioning></versioning>\n")
+            .append("        <copiers>0</copiers>\n")
+            .append("        <pullers>0</pullers>\n")
+            .append("        <hashers>0</hashers>\n")
+            .append("        <order>random</order>\n")
+            .append("        <ignoreDelete>false</ignoreDelete>\n")
+            .append("    </folder>")
+            .toString();
+
+    private static final String SERVER_DEVICE = new StringBuilder()
+            .append("    <device id=\"SERVER_DEVICE_ID\" name=\"Server\" compression=\"metadata\" introducer=\"false\">\n")
+            .append("        <address>dynamic</address>\n")
+            .append("    </device>")
+            .toString();
+
     private static String device_id;
     private static String device_id_short;
 
@@ -64,28 +92,59 @@ public class Syncthing {
                 .sed("s/-.*//")
                 .toStringResult();
 
+        file = new File(SERVER_DEVICE_ID_TXT);
+        if (!file.exists()) {
+            extractAssets(CallerCtx, ASSETS_SERVER_DEVICE_ID_TXT, SERVER_DEVICE_ID_TXT);
+        }
+        server_device_id = Unix4j.cat(SERVER_DEVICE_ID_TXT)
+                .toStringResult();
+
         if (isOriginConfigXml()) {
             sedMisc2ConfigXml();
             sedSync2ConfigXml();
+            sedSyncTemp2ConfigXml();
         }
     }
 
+    private static void sedSyncTemp2ConfigXml() {
+        String server_extra_folder_device = Unix4j.fromString(SERVER_EXTRA_FOLDER_DEVICE)
+                .sed(SedOption.substitute, "FOLDER_ID", device_id_short + "-Temp")
+                .sed(SedOption.substitute, "FOLDER_PATH", SYNC_TEMP_PATH)
+                .sed(SedOption.substitute, "CLIENT_DEVICE_ID", device_id)
+                .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
+                .toStringResult();
+        Unix4j.fromFile(CONFIG_XML)
+                .sed(SedOption.append, "^    </folder>", server_extra_folder_device)
+                .toFile(CONFIG_XML + ".tmp");
+        ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
+    }
+
     private static void sedSync2ConfigXml() {
+        String server_default_folder_device = Unix4j.fromString(SERVER_DEFAULT_FOLDER_DEVICE)
+                .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
+                .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
                 .sed("s/id=\"default\" path=\"\\/data\\/Sync\"/id=\"" + device_id_short + "\" path=\"" + SYNC_PATH_SED + "\"/")
+                .sed(SedOption.append, "^        <device id=", server_default_folder_device)
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
     }
 
     private static void sedMisc2ConfigXml() {
+        String server_device = Unix4j.fromString(SERVER_DEVICE)
+                .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
+                .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
+                .sed(SedOption.append, "^    </device>", server_device)
                 .sed("s/urAccepted>0/urAccepted>-1/")
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
     }
 
     private static boolean isOriginConfigXml() {
-        final String count = Unix4j.fromFile(CONFIG_XML).grep(GrepOption.count, "\"/data/Sync\"").toStringResult();
+        final String count = Unix4j.fromFile(CONFIG_XML)
+                .grep(GrepOption.count, "\"/data/Sync\"")
+                .toStringResult();
         return !("0".equals(count));
     }
 
