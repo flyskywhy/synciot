@@ -85,7 +85,8 @@ public class Syncthing {
     }
 
     private static boolean isOriginConfigXml() {
-        return "0" != Unix4j.fromFile(CONFIG_XML).grep(GrepOption.count, "\"\\/data\\/Sync\"").toStringResult();
+        final String count = Unix4j.fromFile(CONFIG_XML).grep(GrepOption.count, "\"/data/Sync\"").toStringResult();
+        return !("0".equals(count));
     }
 
     private static void generateConfigXml() {
