@@ -59,6 +59,7 @@ public class Syncthing {
 
     private static String device_id;
     private static String device_id_short;
+    private static Thread syncthingThread;
 
     public static String getDevice_id() {
         return device_id;
@@ -69,6 +70,9 @@ public class Syncthing {
     }
 
     public static void startSyncthing(Context ctx) {
+        // To get root at the very beginning
+        ShellInterface.isSuAvailable();
+
         CallerCtx = ctx;
         dataPath = "/data/data/" + CallerCtx.getApplicationContext().getPackageName();
         syncthing = dataPath + "/" + ASSETS_SYNCTHING;
@@ -104,6 +108,17 @@ public class Syncthing {
             sedSync2ConfigXml();
             sedSyncTemp2ConfigXml();
         }
+
+        if (null == syncthingThread) {
+            syncthingThread = new Thread(new Runnable() {
+                public void run() {
+                    ShellInterface.runCommand(syncthing
+                            + " -no-browser -no-restart -gui-address=0.0.0.0:8384 -home="
+                            + SYNCTHING_CONFIG_PATH + "/");
+                }
+            });
+        }
+        syncthingThread.start();
     }
 
     private static void sedSyncTemp2ConfigXml() {
@@ -135,6 +150,7 @@ public class Syncthing {
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
+                .sed(SedOption.substitute, "localhost", device_id_short)
                 .sed(SedOption.append, "^    </device>", server_device)
                 .sed("s/urAccepted>0/urAccepted>-1/")
                 .toFile(CONFIG_XML + ".tmp");
@@ -157,12 +173,25 @@ public class Syncthing {
     }
 
     private static void mkdirSyncTemp() {
+        File file = new File(SYNC_TEMP_PATH);
+        if (!file.exists() && !file.isDirectory()) {
+            file.mkdir();
+        }
+
+        file =  new File(SYNC_TEMP_PATH + "/.stfolder");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (ShellInterface.isSuAvailable()) {
             Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp ramfs");
             String out = ShellInterface.getProcessOutput("mount");
             Matcher matcher = RAMFS_PATTERN.matcher(out);
             if (!matcher.find()) {
-                ShellInterface.runCommand("mkdir -p " + SYNC_TEMP_PATH + "/");
                 ShellInterface.runCommand("mount -t ramfs -o mode=0777 none " + SYNC_TEMP_PATH + "/");
                 ShellInterface.runCommand("touch " + SYNC_TEMP_PATH + "/.stfolder");
             }
@@ -173,6 +202,15 @@ public class Syncthing {
         File file = new File(SYNC_PATH);
         if (!file.exists() && !file.isDirectory()) {
             file.mkdir();
+        }
+
+        file =  new File(SYNC_PATH + "/.stfolder");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
