@@ -22,8 +22,8 @@ public class Syncthing {
     private static Context CallerCtx;
 
     private static String dataPath;
+    private static final String ORIGIN_SYNC_PATH = "/data/Sync";
     private static final String SYNC_PATH = "/sdcard/iot/Sync";
-    private static final String SYNC_PATH_SED = "\\/sdcard\\/iot\\/Sync";
     private static final String SYNC_TEMP_PATH = "/sdcard/iot/SyncTemp";
     private static final String SYNCTHING_CONFIG_PATH = "/sdcard/iot/sync-config";
 
@@ -124,7 +124,7 @@ public class Syncthing {
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
-                .sed("s/id=\"default\" path=\"\\/data\\/Sync\"/id=\"" + device_id_short + "\" path=\"" + SYNC_PATH_SED + "\"/")
+                .sed(SedOption.substitute, "id=\"default\" path=\"" + ORIGIN_SYNC_PATH + "\"", "id=\"" + device_id_short + "\" path=\"" + SYNC_PATH + "\"")
                 .sed(SedOption.append, "^        <device id=", server_default_folder_device)
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
@@ -143,7 +143,7 @@ public class Syncthing {
 
     private static boolean isOriginConfigXml() {
         final String count = Unix4j.fromFile(CONFIG_XML)
-                .grep(GrepOption.count, "\"/data/Sync\"")
+                .grep(GrepOption.count, "\"" + ORIGIN_SYNC_PATH + "\"")
                 .toStringResult();
         return !("0".equals(count));
     }
