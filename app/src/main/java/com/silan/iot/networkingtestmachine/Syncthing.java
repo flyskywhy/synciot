@@ -188,11 +188,11 @@ public class Syncthing {
         }
 
         if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp ramfs");
+            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp tmpfs");
             String out = ShellInterface.getProcessOutput("mount");
             Matcher matcher = RAMFS_PATTERN.matcher(out);
             if (!matcher.find()) {
-                ShellInterface.runCommand("mount -t ramfs -o mode=0777 none " + SYNC_TEMP_PATH + "/");
+                ShellInterface.runCommand("mount -t tmpfs -o mode=0777 none " + SYNC_TEMP_PATH + "/");
                 ShellInterface.runCommand("touch " + SYNC_TEMP_PATH + "/.stfolder");
             }
         }
