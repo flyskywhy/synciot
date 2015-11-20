@@ -1,4 +1,4 @@
-package com.silan.iot.networkingtestmachine;
+package com.synciot;
 
 import android.content.Context;
 import android.content.res.AssetManager;

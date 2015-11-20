@@ -1,4 +1,4 @@
-package com.silan.iot.networkingtestmachine;
+package com.synciot;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;

@@ -27,7 +27,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 
-import com.silan.iot.networkingtestmachine.R;
+import com.synciot.R;
 
 import android_serialport_api.SerialPort;
 

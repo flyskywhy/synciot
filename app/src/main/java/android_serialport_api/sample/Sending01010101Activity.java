@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import android.os.Bundle;
 
-import com.silan.iot.networkingtestmachine.R;
+import com.synciot.R;
 
 public class Sending01010101Activity extends SerialPortActivity {
 

@@ -1,4 +1,4 @@
-package com.silan.iot.networkingtestmachine;
+package com.synciot;
 
 /**
  * Created by lizheng on 15-10-21.

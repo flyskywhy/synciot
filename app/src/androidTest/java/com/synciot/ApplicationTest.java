@@ -1,4 +1,4 @@
-package com.silan.iot.networkingtestmachine;
+package com.synciot;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
