@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 /**
  * Created by lizheng on 15-11-4.
  */
-public class Syncthing {
+public class Synciot {
 
     private static Context CallerCtx;
 

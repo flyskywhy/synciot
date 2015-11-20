@@ -38,7 +38,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Syncthing.startSyncthing(this);
+        Synciot.startSyncthing(this);
 
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
