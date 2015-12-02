@@ -2,6 +2,7 @@
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/goLibraries.xml
 .DS_Store
 /build
 /captures
