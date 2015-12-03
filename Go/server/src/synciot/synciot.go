@@ -4,13 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
+	"path/filepath"
 
 	"github.com/thejerf/suture"
 )
 
 var (
 	Version = "unknown-dev"
+)
+
+const (
+	guiAssets  = "gui"
+	guiAddress = "127.0.0.1:7777"
 )
 
 var (
@@ -52,19 +57,13 @@ func synciotMain() {
 }
 
 func setupGUI(mainSvc *suture.Supervisor) {
-	svc := &apiSvc{}
-	mainSvc.Add(svc)
-}
-
-type apiSvc struct {
-}
-
-func (s *apiSvc) Serve() {
-	for {
-		time.Sleep(time.Second)
-		fmt.Println("Hello")
+	assets := filepath.Join(filepath.Dir(os.Args[0]), guiAssets)
+	api, err := newAPISvc(assets, guiAddress)
+	if err != nil {
+		fmt.Println("Cannot start GUI:", err)
+	} else {
+		fmt.Println("Starting GUI from", assets)
+		fmt.Println("API listening on", guiAddress)
 	}
-}
-
-func (s *apiSvc) Stop() {
+	mainSvc.Add(api)
 }
