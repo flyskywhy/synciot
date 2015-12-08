@@ -19,6 +19,7 @@ const (
 )
 
 var (
+	binDir   string
 	quitChan chan os.Signal
 )
 
@@ -36,7 +37,9 @@ func main() {
 	flag.Parse()
 
 	args := os.Args
-	fmt.Println(args)
+	binPath, _ := filepath.Abs(args[0])
+	binDir, _ = filepath.Split(binPath)
+	fmt.Println("Starting", binPath)
 
 	if showVersion {
 		fmt.Println(Version)
@@ -44,6 +47,8 @@ func main() {
 	}
 
 	synciotMain()
+
+	fmt.Println(binPath, "exited")
 }
 
 func synciotMain() {
@@ -52,12 +57,14 @@ func synciotMain() {
 
 	setupGUI(mainSvc)
 
+	runCmd(binDir, "echo", "Hello")
+
 	<-quitChan
 	mainSvc.Stop()
 }
 
 func setupGUI(mainSvc *suture.Supervisor) {
-	assets := filepath.Join(filepath.Dir(os.Args[0]), guiAssets)
+	assets := filepath.Join(binDir, guiAssets)
 	api, err := newAPISvc(assets, guiAddress)
 	if err != nil {
 		fmt.Println("Cannot start GUI:", err)
