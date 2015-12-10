@@ -3,7 +3,7 @@
 // Copyright (C) 2015 Synciot
 
 -->
-<html lang="en" ng-app="synciot" class="ng-cloak">
+<html lang="en" ng-app="synciot" ng-controller="SynciotController" class="ng-cloak">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,6 +12,7 @@
     <meta name="author" content="">
     <link rel="shortcut icon" href="assets/img/favicon.png">
 
+    <title ng-bind="thisDeviceName() + ' | Synciot'"></title>
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/font/raleway.css" rel="stylesheet">
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -53,6 +54,9 @@
 <!-- / vendor scripts -->
 
 <!-- gui application code -->
+<script src="synciot/core/module.js"></script>
+<script src="synciot/core/synciotController.js"></script>
+
 <script src="assets/lang/valid-langs.js"></script>
 <script src="assets/lang/prettyprint.js"></script>
 <script src="synciot/app.js"></script>

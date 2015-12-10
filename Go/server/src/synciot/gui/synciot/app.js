@@ -5,7 +5,9 @@
 /*global $: false, angular: false, console: false, validLangs: false */
 
 var synciot = angular.module('synciot', [
-    'pascalprecht.translate'
+    'pascalprecht.translate',
+
+    'synciot.core'
 ]);
 
 synciot.config(function ($translateProvider) {
