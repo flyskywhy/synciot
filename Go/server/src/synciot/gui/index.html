@@ -1,1 +1,62 @@
-Hello
+<!DOCTYPE html>
+<!--
+// Copyright (C) 2015 Synciot
+
+-->
+<html lang="en" ng-app="synciot" class="ng-cloak">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/font/raleway.css" rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="assets/css/overrides.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="container" id="content">
+
+    <!-- Panel: Restart Needed -->
+
+    <!--<div ng-if="!configInSync" class="row">-->
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading"><h3 class="panel-title"><span class="fa fa-exclamation-circle"></span><span translate>Restart Needed</span></h3></div>
+                <div class="panel-body">
+                    <p translate>The configuration has been saved but not activated. Syncthing must restart to activate the new configuration.</p>
+                </div>
+                <div class="panel-footer">
+                    <button type="button" class="btn btn-sm btn-default pull-right" ng-click="restart()">
+                        <span class="fa fa-refresh"></span>&nbsp;<span translate>Restart</span>
+                    </button>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    <!--</div>-->
+
+</div> <!-- /container -->
+
+<!-- vendor scripts -->
+<script src="vendor/jquery/jquery-2.0.3.min.js"></script>
+<script src="vendor/angular/angular.min.js"></script>
+<script src="vendor/angular/angular-translate.min.js"></script>
+<script src="vendor/angular/angular-translate-loader.min.js"></script>
+<script src="vendor/angular/angular-dirPagination.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!-- / vendor scripts -->
+
+<!-- gui application code -->
+<script src="assets/lang/valid-langs.js"></script>
+<script src="assets/lang/prettyprint.js"></script>
+<script src="synciot/app.js"></script>
+<!-- / gui application code -->
+
+</body>
+</html>
