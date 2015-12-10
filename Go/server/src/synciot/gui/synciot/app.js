@@ -5,4 +5,16 @@
 /*global $: false, angular: false, console: false, validLangs: false */
 
 var synciot = angular.module('synciot', [
+    'pascalprecht.translate'
 ]);
+
+synciot.config(function ($translateProvider) {
+    // language and localisation
+
+    $translateProvider.useStaticFilesLoader({
+        prefix: 'assets/lang/lang-',
+        suffix: '.json'
+    });
+
+    $translateProvider.use("zh-CN");
+});
