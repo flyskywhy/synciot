@@ -32,7 +32,7 @@
                 <ul class="dropdown-menu">
                     <li><a href=""><span class="fa fa-fw fa-cog"></span>&nbsp;<span translate>Settings</span></a></li>
                     <li class="divider"></li>
-                    <li><a href=""><span class="fa fa-fw fa-heart-o"></span>&nbsp;<span translate>About</span></a></li>
+                    <li><a href="" ng-click="about()"><span class="fa fa-fw fa-heart-o"></span>&nbsp;<span translate>About</span></a></li>
                 </ul>
             </li>
         </ul>
@@ -72,6 +72,8 @@
     </div>
 </nav>
 
+<div about-modal></div>
+
 <!-- vendor scripts -->
 <script src="vendor/jquery/jquery-2.0.3.min.js"></script>
 <script src="vendor/angular/angular.min.js"></script>
@@ -83,6 +85,8 @@
 
 <!-- gui application code -->
 <script src="synciot/core/module.js"></script>
+<script src="synciot/core/aboutModalDirective.js"></script>
+<script src="synciot/core/modalDirective.js"></script>
 <script src="synciot/core/synciotController.js"></script>
 
 <script src="assets/lang/valid-langs.js"></script>

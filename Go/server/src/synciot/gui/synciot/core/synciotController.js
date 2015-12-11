@@ -19,6 +19,10 @@ angular.module('synciot.core')
             return $scope.deviceName;
         };
 
+        $scope.about = function () {
+            $('#about').modal('show');
+        };
+
         // pseudo main. called on all definitions assigned
         initController();
     });
