@@ -13,6 +13,7 @@ angular.module('synciot.core')
 
         // public/scope definitions
 
+        $scope.configInSync = true;
         $scope.deviceName = "(server)";
 
         $scope.thisDeviceName = function () {
