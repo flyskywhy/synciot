@@ -15,9 +15,24 @@ angular.module('synciot.core')
 
         $scope.configInSync = true;
         $scope.deviceName = "(server)";
+        $scope.folders = {};
 
         $scope.thisDeviceName = function () {
             return $scope.deviceName;
+        };
+
+        $scope.folderList = function () {
+            return folderList($scope.folders);
+        };
+
+        $scope.directoryList = ['~/synciot', 'D:\\synciot'];
+
+        $scope.addFolder = function () {
+            $scope.currentFolder = {
+            };
+            $scope.editingExisting = false;
+            $scope.folderEditor.$setPristine();
+            $('#editFolder').modal();
         };
 
         $scope.about = function () {

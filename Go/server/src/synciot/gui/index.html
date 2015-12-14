@@ -60,6 +60,48 @@
         </div>
     </div>
 
+    <!-- Folder list (top left) -->
+
+    <div class="col-md-6">
+        <h3 translate>Folders</h3>
+        <div class="panel-group" id="folders">
+            <div class="panel panel-default" ng-repeat="folder in folderList()">
+                <div class="panel-heading" data-toggle="collapse" data-parent="#folders" href="#folder-{{$index}}" style="cursor: pointer">
+                    <h3 class="panel-title">
+                        <span class="fa fa-folder hidden-xs"></span>{{folder.id}}
+                    </h3>
+                </div>
+                <div id="folder-{{$index}}" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <table class="table table-condensed table-striped">
+                            <tbody>
+                            <tr>
+                                <th><span class="fa fa-fw fa-folder-open"></span>&nbsp;<span translate>Folder Path</span></th>
+                                <td class="text-right">{{folder.path}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="panel-footer">
+                        <span class="pull-right">
+                            <button type="button" class="btn btn-sm btn-default" ng-click="editFolder(folder)">
+                                <span class="fa fa-pencil"></span>&nbsp;<span translate>Edit</span>
+                            </button>
+                        </span>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <span class="pull-right">
+            <button type="button" class="btn btn-sm btn-default" ng-click="addFolder()">
+                <span class="fa fa-plus"></span>&nbsp;<span translate>Add Folder</span>
+            </button>
+        </span>
+        <div class="clearfix"></div>
+        <hr class="visible-sm"/>
+    </div>
+
 </div> <!-- /container -->
 
 <!-- Bottom bar -->
@@ -72,6 +114,7 @@
     </div>
 </nav>
 
+<div edit-folder-modal></div>
 <div about-modal></div>
 
 <!-- vendor scripts -->
@@ -88,6 +131,10 @@
 <script src="synciot/core/aboutModalDirective.js"></script>
 <script src="synciot/core/modalDirective.js"></script>
 <script src="synciot/core/synciotController.js"></script>
+<script src="synciot/core/uniqueFolderDirective.js"></script>
+
+<script src="synciot/folder/module.js"></script>
+<script src="synciot/folder/editFolderModalDirective.js"></script>
 
 <script src="assets/lang/valid-langs.js"></script>
 <script src="assets/lang/prettyprint.js"></script>
