@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,7 +27,23 @@ func newAPISvc(assets, address string) (*apiSvc, error) {
 }
 
 func (s *apiSvc) Serve() {
+	s.stop = make(chan struct{})
+
+	// The GET handlers
+	getRestMux := http.NewServeMux()
+	getRestMux.HandleFunc("/rest/system/status", s.getSystemStatus)
+
+	// The POST handlers
+	postRestMux := http.NewServeMux()
+
+	// A handler that splits requests between the two above and disables
+	// caching
+	restMux := noCacheMiddleware(getPostHandler(getRestMux, postRestMux))
+
+	// The main routing handler
 	mux := http.NewServeMux()
+	mux.Handle("/rest/", restMux)
+
 	mux.Handle("/", embeddedStatic{
 		assetDir: s.assetDir,
 	})
@@ -46,6 +63,38 @@ func (s *apiSvc) Serve() {
 }
 
 func (s *apiSvc) Stop() {
+}
+
+func getPostHandler(get, post http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			get.ServeHTTP(w, r)
+		case "POST":
+			post.ServeHTTP(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+}
+
+func noCacheMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "max-age=0, no-cache, no-store")
+		w.Header().Set("Expires", time.Now().UTC().Format(http.TimeFormat))
+		w.Header().Set("Pragma", "no-cache")
+		h.ServeHTTP(w, r)
+	})
+}
+
+func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
+	tilde, _ := ExpandTilde("~")
+	res := make(map[string]interface{})
+	res["tilde"] = tilde
+	res["pathSeparator"] = string(filepath.Separator)
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(res)
 }
 
 type embeddedStatic struct {

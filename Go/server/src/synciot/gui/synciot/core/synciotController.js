@@ -17,6 +17,22 @@ angular.module('synciot.core')
         $scope.deviceName = "(server)";
         $scope.folders = {};
 
+        $scope.emitHTTPError = function (data, status, headers, config) {
+            $scope.$emit('HTTPError', {data: data, status: status, headers: headers, config: config});
+        };
+
+        function refreshSystem() {
+            $http.get(urlbase + '/system/status').success(function (data) {
+                $scope.system = data;
+
+                console.log("refreshSystem", data);
+            }).error($scope.emitHTTPError);
+        }
+
+        $scope.refresh = function () {
+            refreshSystem();
+        };
+
         $scope.thisDeviceName = function () {
             return $scope.deviceName;
         };

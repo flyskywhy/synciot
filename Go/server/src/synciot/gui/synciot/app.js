@@ -11,6 +11,8 @@ var synciot = angular.module('synciot', [
     'synciot.folder'
 ]);
 
+var urlbase = 'rest';
+
 synciot.config(function ($translateProvider) {
     // language and localisation
 
