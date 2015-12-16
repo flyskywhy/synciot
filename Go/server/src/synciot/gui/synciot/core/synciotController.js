@@ -13,6 +13,7 @@ angular.module('synciot.core')
 
         // public/scope definitions
 
+        $scope.config = {};
         $scope.configInSync = true;
         $scope.deviceName = "(server)";
         $scope.folders = {};
@@ -37,6 +38,17 @@ angular.module('synciot.core')
             return $scope.deviceName;
         };
 
+        $scope.saveConfig = function () {
+            var cfg = JSON.stringify($scope.config);
+            var opts = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            $http.post(urlbase + '/system/config', cfg, opts).success(function () {
+            }).error($scope.emitHTTPError);
+        };
+
         $scope.folderList = function () {
             return folderList($scope.folders);
         };
@@ -49,6 +61,18 @@ angular.module('synciot.core')
             $scope.editingExisting = false;
             $scope.folderEditor.$setPristine();
             $('#editFolder').modal();
+        };
+
+        $scope.saveFolder = function () {
+            var folderCfg;
+
+            $('#editFolder').modal('hide');
+            folderCfg = $scope.currentFolder;
+
+            $scope.folders[folderCfg.id] = folderCfg;
+            $scope.config.folders = folderList($scope.folders);
+
+            $scope.saveConfig();
         };
 
         $scope.about = function () {

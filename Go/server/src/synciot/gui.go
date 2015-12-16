@@ -35,6 +35,7 @@ func (s *apiSvc) Serve() {
 
 	// The POST handlers
 	postRestMux := http.NewServeMux()
+	postRestMux.HandleFunc("/rest/system/config", s.postSystemConfig)
 
 	// A handler that splits requests between the two above and disables
 	// caching
@@ -85,6 +86,34 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 		w.Header().Set("Pragma", "no-cache")
 		h.ServeHTTP(w, r)
 	})
+}
+
+type FolderConfiguration struct {
+	ID      string `json:"id"`
+	RawPath string `json:"path"`
+}
+
+type Configuration struct {
+	Folders []FolderConfiguration `json:"folders"`
+}
+
+func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
+	var cfg Configuration
+
+	err := json.NewDecoder(r.Body).Decode(&cfg)
+
+	if err != nil {
+		fmt.Println("decoding posted config:", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	for key, value := range cfg.Folders {
+		fmt.Println("Key:", key, "Value:", value)
+		fmt.Println("Id:", value.ID, "Path:", value.RawPath)
+	}
+
+	fmt.Println(cfg.Folders)
 }
 
 func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
