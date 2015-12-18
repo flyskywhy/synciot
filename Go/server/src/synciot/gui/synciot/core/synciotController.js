@@ -8,6 +8,7 @@ angular.module('synciot.core')
         // private/helper definitions
 
         function initController() {
+            $scope.refresh();
             setInterval($scope.refresh, 10000);
             refreshConfig();
         }
@@ -74,6 +75,17 @@ angular.module('synciot.core')
 
         $scope.directoryList = ['~/synciot', 'D:\\synciot'];
 
+        $scope.editFolder = function (folderCfg) {
+            $scope.currentFolder = angular.copy(folderCfg);
+            if ($scope.currentFolder.path.slice(-1) == $scope.system.pathSeparator) {
+                $scope.currentFolder.path = $scope.currentFolder.path.slice(0, -1);
+            }
+
+            $scope.editingExisting = true;
+            $scope.folderEditor.$setPristine();
+            $('#editFolder').modal();
+        };
+
         $scope.addFolder = function () {
             $scope.currentFolder = {
             };
@@ -89,6 +101,18 @@ angular.module('synciot.core')
             folderCfg = $scope.currentFolder;
 
             $scope.folders[folderCfg.id] = folderCfg;
+            $scope.config.folders = folderList($scope.folders);
+
+            $scope.saveConfig();
+        };
+
+        $scope.deleteFolder = function (id) {
+            $('#editFolder').modal('hide');
+            if (!$scope.editingExisting) {
+                return;
+            }
+
+            delete $scope.folders[id];
             $scope.config.folders = folderList($scope.folders);
 
             $scope.saveConfig();
