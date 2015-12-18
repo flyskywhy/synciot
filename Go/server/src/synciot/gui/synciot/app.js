@@ -31,6 +31,14 @@ function folderCompare(a, b) {
     return a.id > b.id;
 }
 
+function folderMap(l) {
+    var m = {};
+    l.forEach(function (r) {
+        m[r.id] = r;
+    });
+    return m;
+}
+
 function folderList(m) {
     var l = [];
     for (var id in m) {
@@ -38,4 +46,12 @@ function folderList(m) {
     }
     l.sort(folderCompare);
     return l;
+}
+
+function isEmptyObject(obj) {
+    var name;
+    for (name in obj) {
+        return false;
+    }
+    return true;
 }

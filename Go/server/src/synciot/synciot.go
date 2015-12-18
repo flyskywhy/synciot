@@ -16,7 +16,18 @@ var (
 const (
 	guiAssets  = "gui"
 	guiAddress = "127.0.0.1:7777"
+
+	CONFIG_JSON = "synciot.json"
 )
+
+type FolderConfiguration struct {
+	ID      string `json:"id"`
+	RawPath string `json:"path"`
+}
+
+type Configuration struct {
+	Folders []FolderConfiguration `json:"folders"`
+}
 
 var (
 	binDir   string
@@ -65,7 +76,9 @@ func synciotMain() {
 
 func setupGUI(mainSvc *suture.Supervisor) {
 	assets := filepath.Join(binDir, guiAssets)
-	api, err := newAPISvc(assets, guiAddress)
+	config := filepath.Join(binDir, CONFIG_JSON)
+
+	api, err := newAPISvc(assets, config, guiAddress)
 	if err != nil {
 		fmt.Println("Cannot start GUI:", err)
 	} else {

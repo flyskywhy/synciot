@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -12,13 +13,15 @@ import (
 
 type apiSvc struct {
 	assetDir string
+	cfgPath  string
 	listener net.Listener
 	stop     chan struct{}
 }
 
-func newAPISvc(assets, address string) (*apiSvc, error) {
+func newAPISvc(assets, config, address string) (*apiSvc, error) {
 	svc := &apiSvc{
 		assetDir: assets,
+		cfgPath:  config,
 	}
 
 	var err error
@@ -31,6 +34,7 @@ func (s *apiSvc) Serve() {
 
 	// The GET handlers
 	getRestMux := http.NewServeMux()
+	getRestMux.HandleFunc("/rest/system/config", s.getSystemConfig)
 	getRestMux.HandleFunc("/rest/system/status", s.getSystemStatus)
 
 	// The POST handlers
@@ -88,32 +92,24 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-type FolderConfiguration struct {
-	ID      string `json:"id"`
-	RawPath string `json:"path"`
-}
-
-type Configuration struct {
-	Folders []FolderConfiguration `json:"folders"`
-}
-
-func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
-	var cfg Configuration
-
-	err := json.NewDecoder(r.Body).Decode(&cfg)
+func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {
+	cfg, err := ioutil.ReadFile(s.cfgPath)
 
 	if err != nil {
-		fmt.Println("decoding posted config:", err)
+		fmt.Println(err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	for key, value := range cfg.Folders {
-		fmt.Println("Key:", key, "Value:", value)
-		fmt.Println("Id:", value.ID, "Path:", value.RawPath)
-	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Write(cfg)
+}
 
-	fmt.Println(cfg.Folders)
+func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
+	var cfg = make([]byte, r.ContentLength)
+	r.Body.Read(cfg)
+
+	ioutil.WriteFile(s.cfgPath, cfg, 0644)
 }
 
 func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
