@@ -17,6 +17,7 @@ angular.module('synciot.core')
 
         $scope.config = {};
         $scope.configInSync = true;
+        $scope.model = {};
         $scope.deviceName = "(server)";
         $scope.folders = {};
 
@@ -24,11 +25,29 @@ angular.module('synciot.core')
             $scope.$emit('HTTPError', {data: data, status: status, headers: headers, config: config});
         };
 
+        var debouncedFuncs = {};
+
+        function refreshFolder(folder) {
+            var key = "refreshFolder" + folder;
+            if (!debouncedFuncs[key]) {
+                debouncedFuncs[key] = debounce(function () {
+                    $http.get(urlbase + '/stats/folder?folder=' + encodeURIComponent(folder)).success(function (data) {
+                        $scope.model[folder] = data;
+                        console.log("refreshFolder", folder, data);
+                    }).error($scope.emitHTTPError);
+                }, 1000, true);
+            }
+            debouncedFuncs[key]();
+        }
+
         function updateLocalConfig(config) {
             var hasConfig = !isEmptyObject($scope.config);
 
             $scope.config = config;
             $scope.folders = folderMap($scope.config.folders);
+            Object.keys($scope.folders).forEach(function (folder) {
+                refreshFolder(folder);
+            });
 
             if (!hasConfig) {
                 $scope.$emit('ConfigLoaded');
@@ -52,6 +71,20 @@ angular.module('synciot.core')
 
         $scope.refresh = function () {
             refreshSystem();
+        };
+
+        $scope.folderStatus = function (folderCfg) {
+            if (typeof $scope.model[folderCfg.id] === 'undefined') {
+                return 'unknown';
+            }
+
+            if (!$scope.model[folderCfg.id].state) {
+                return 'unknown';
+            }
+
+            var state = '' + $scope.model[folderCfg.id].state;
+
+            return state;
         };
 
         $scope.thisDeviceName = function () {
@@ -120,6 +153,14 @@ angular.module('synciot.core')
 
         $scope.about = function () {
             $('#about').modal('show');
+        };
+
+        $scope.stopSyncthing = function (folder) {
+            $scope.model[folder].state = 'stopped';
+        };
+
+        $scope.startSyncthing = function (folder) {
+            $scope.model[folder].state = 'running';
         };
 
         // pseudo main. called on all definitions assigned

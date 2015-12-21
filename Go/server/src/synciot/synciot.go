@@ -29,6 +29,10 @@ type Configuration struct {
 	Folders []FolderConfiguration `json:"folders"`
 }
 
+type Model struct {
+	State string `json:"state"`
+}
+
 var (
 	binDir   string
 	quitChan chan os.Signal

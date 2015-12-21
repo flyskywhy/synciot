@@ -12,7 +12,9 @@ import (
 )
 
 type apiSvc struct {
+	cfg      *Configuration
 	assetDir string
+	model    *Model
 	cfgPath  string
 	listener net.Listener
 	stop     chan struct{}
@@ -34,6 +36,7 @@ func (s *apiSvc) Serve() {
 
 	// The GET handlers
 	getRestMux := http.NewServeMux()
+	getRestMux.HandleFunc("/rest/stats/folder", s.getFolderStats)
 	getRestMux.HandleFunc("/rest/system/config", s.getSystemConfig)
 	getRestMux.HandleFunc("/rest/system/status", s.getSystemStatus)
 
@@ -103,6 +106,28 @@ func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Write(cfg)
+}
+
+func (s *apiSvc) getFolderStats(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	folder := qs.Get("folder")
+	res := folderSummary(s.cfg, s.model, folder)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(res)
+}
+
+func folderSummary(cfg *Configuration, m *Model, folder string) map[string]interface{} {
+	var res = make(map[string]interface{})
+
+	req, err := http.NewRequest("GET", "http://127.0.0.1:8384/rest/system/ping", nil)
+	_, err = http.DefaultClient.Do(req)
+	if err == nil {
+		res["state"] = "running"
+	} else {
+		res["state"] = "stopped"
+	}
+
+	return res
 }
 
 func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {

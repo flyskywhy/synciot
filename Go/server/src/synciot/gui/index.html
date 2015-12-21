@@ -83,6 +83,14 @@
                         </table>
                     </div>
                     <div class="panel-footer">
+                        <span class="pull-left">
+                            <button type="button" class="btn btn-sm btn-default" ng-click="stopSyncthing(folder.id)" ng-disabled="['stopped', 'unknown'].indexOf(folderStatus(folder)) > -1">
+                                <span class="fa fa-power-off"></span>&nbsp;<span translate>0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-default" ng-click="startSyncthing(folder.id)" ng-disabled="['running', 'unknown'].indexOf(folderStatus(folder)) > -1">
+                                <span class="fa fa-power-off"></span>&nbsp;<span translate>1</span>
+                            </button>
+                        </span>
                         <span class="pull-right">
                             <button type="button" class="btn btn-sm btn-default" ng-click="editFolder(folder)">
                                 <span class="fa fa-pencil"></span>&nbsp;<span translate>Edit</span>

@@ -55,3 +55,37 @@ function isEmptyObject(obj) {
     }
     return true;
 }
+
+function debounce(func, wait) {
+    var timeout, args, context, timestamp, result, again;
+
+    var later = function () {
+        var last = Date.now() - timestamp;
+        if (last < wait) {
+            timeout = setTimeout(later, wait - last);
+        } else {
+            timeout = null;
+            if (again) {
+                again = false;
+                result = func.apply(context, args);
+                context = args = null;
+            }
+        }
+    };
+
+    return function () {
+        context = this;
+        args = arguments;
+        timestamp = Date.now();
+        var callNow = !timeout;
+        if (!timeout) {
+            timeout = setTimeout(later, wait);
+            result = func.apply(context, args);
+            context = args = null;
+        } else {
+            again = true;
+        }
+
+        return result;
+    };
+}
