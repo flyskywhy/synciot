@@ -6,6 +6,10 @@
 			"ImportPath": "github.com/thejerf/suture",
 			"Comment": "v1.0.1",
 			"Rev": "99c1f2d613756768fc4299acd9dc621e11ed3fd7"
+		},
+		{
+			"ImportPath": "github.com/wuxicn/pipeline",
+			"Rev": "681abab1f5a821f5a63e7abf1c2e8441e2f36ab7"
 		}
 	]
 }

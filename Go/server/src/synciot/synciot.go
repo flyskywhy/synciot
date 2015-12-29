@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/thejerf/suture"
+	"github.com/wuxicn/pipeline"
 )
 
 var (
@@ -72,7 +74,20 @@ func synciotMain() {
 
 	setupGUI(mainSvc)
 
-	runCmd(binDir, "echo", "Hello")
+	stdout, stderr, err := pipeline.Run(
+		exec.Command("echo", "Hello", "World"),
+		exec.Command("sed", "s/World/Golang/"))
+
+	fmt.Println("STDOUT:")
+	fmt.Println(stdout.String())
+
+	fmt.Println("STDERR:")
+	fmt.Println(stderr.String())
+
+	if err != nil {
+		e := err.(*pipeline.Error)
+		fmt.Println("ERR:", e.Code, e.Err)
+	}
 
 	<-quitChan
 	mainSvc.Stop()
