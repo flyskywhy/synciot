@@ -92,7 +92,7 @@ angular.module('synciot.core')
         };
 
         $scope.saveConfig = function () {
-            var cfg = JSON.stringify($scope.config);
+            var cfg = angular.toJson($scope.config);
             var opts = {
                 headers: {
                     'Content-Type': 'application/json'
