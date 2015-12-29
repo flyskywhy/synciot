@@ -130,11 +130,18 @@ angular.module('synciot.core')
         $scope.saveFolder = function () {
             var folderCfg;
 
+            if ($scope.currentFolder.path.trim().charAt(0) == '~') {
+                $scope.currentFolder.path = $scope.system.tilde + $scope.currentFolder.path.trim().substring(1);
+            }
+
             $('#editFolder').modal('hide');
             folderCfg = $scope.currentFolder;
 
             $scope.folders[folderCfg.id] = folderCfg;
             $scope.config.folders = folderList($scope.folders);
+
+            $http.post(urlbase + '/system/generate?path=' + encodeURIComponent(folderCfg.path)).success(function () {
+            }).error($scope.emitHTTPError);
 
             $scope.saveConfig();
         };

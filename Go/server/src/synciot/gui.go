@@ -7,8 +7,13 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"time"
+
+	"github.com/wuxicn/pipeline"
 )
 
 type apiSvc struct {
@@ -43,6 +48,7 @@ func (s *apiSvc) Serve() {
 	// The POST handlers
 	postRestMux := http.NewServeMux()
 	postRestMux.HandleFunc("/rest/system/config", s.postSystemConfig)
+	postRestMux.HandleFunc("/rest/system/generate", s.postGenFolder)
 
 	// A handler that splits requests between the two above and disables
 	// caching
@@ -108,18 +114,43 @@ func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {
 	w.Write(cfg)
 }
 
+func (s *apiSvc) fillCfgFromFile() {
+	cfg_byte, err := ioutil.ReadFile(s.cfgPath)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	json.Unmarshal(cfg_byte, &s.cfg)
+}
+
 func (s *apiSvc) getFolderStats(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	folder := qs.Get("folder")
-	res := folderSummary(s.cfg, s.model, folder)
+	res := s.folderSummary(folder)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(res)
 }
 
-func folderSummary(cfg *Configuration, m *Model, folder string) map[string]interface{} {
+func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
 	var res = make(map[string]interface{})
+	syncthingGuiPort := ""
 
-	req, err := http.NewRequest("GET", "http://127.0.0.1:8384/rest/system/ping", nil)
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == folder {
+				syncthingGuiPort = getSyncthingGuiPort(filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
+			}
+		}
+	}
+
+	if syncthingGuiPort == "" {
+		return res
+	}
+
+	req, err := http.NewRequest("GET", "http://127.0.0.1:"+syncthingGuiPort+"/rest/system/ping", nil)
 	_, err = http.DefaultClient.Do(req)
 	if err == nil {
 		res["state"] = "running"
@@ -134,7 +165,156 @@ func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
 	var cfg = make([]byte, r.ContentLength)
 	r.Body.Read(cfg)
 
-	ioutil.WriteFile(s.cfgPath, cfg, 0644)
+	err := ioutil.WriteFile(s.cfgPath, cfg, 0644)
+
+	if err == nil {
+		fmt.Println("Writed", s.cfgPath)
+	}
+}
+
+func getSyncthingGuiPort(path string) string {
+	port := ""
+
+	_, err := os.Stat(path)
+	if err != nil {
+		return port
+	}
+
+	stdout, _, err := pipeline.Run(
+		exec.Command("grep", "address", path),
+		exec.Command("tail", "-1"),
+		exec.Command("sed", "s/.*<address>.*://"),
+		exec.Command("sed", "s/<\\/address>.*//"),
+		exec.Command("tr", "-d", "\\\"[\\n][\\r]\\\""))
+
+	if err != nil {
+		e := err.(*pipeline.Error)
+		fmt.Println("ERR:", e.Code, e.Err)
+		return port
+	}
+
+	port = stdout.String()
+	return port
+}
+
+func getSyncthingProtocolPort(path string) string {
+	port := ""
+
+	_, err := os.Stat(path)
+	if err != nil {
+		return port
+	}
+
+	stdout, _, err := pipeline.Run(
+		exec.Command("grep", "listenAddress", path),
+		exec.Command("sed", "s/.*<listenAddress>.*://"),
+		exec.Command("sed", "s/<\\/listenAddress>.*//"),
+		exec.Command("tr", "-d", "\\\"[\\n][\\r]\\\""))
+
+	if err != nil {
+		e := err.(*pipeline.Error)
+		fmt.Println("ERR:", e.Code, e.Err)
+		return port
+	}
+
+	port = stdout.String()
+	return port
+}
+
+func setSyncthingGuiPort(path string, port string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+
+	oldPort := getSyncthingGuiPort(path)
+
+	_, _, err = pipeline.Run(
+		exec.Command("sed", "-i", "s/:"+oldPort+"<\\/address>/:"+port+"<\\/address>/", path))
+
+	if err != nil {
+		e := err.(*pipeline.Error)
+		fmt.Println("ERR:", e.Code, e.Err)
+		return
+	}
+}
+
+func setSyncthingProtocolPort(path string, port string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+
+	oldPort := getSyncthingProtocolPort(path)
+
+	_, _, err = pipeline.Run(
+		exec.Command("sed", "-i", "s/:"+oldPort+"<\\/listenAddress>/:"+port+"<\\/listenAddress>/", path))
+
+	if err != nil {
+		e := err.(*pipeline.Error)
+		fmt.Println("ERR:", e.Code, e.Err)
+		return
+	}
+}
+
+func (s *apiSvc) fromAllConfigXml(get func(string) string) []string {
+	var values []string
+	var value string
+
+	s.fillCfgFromFile()
+
+	if s.cfg == nil || s.cfg.Folders == nil {
+		return values
+	}
+
+	for _, rf := range s.cfg.Folders {
+		value = get(filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
+		if value != "" {
+			values = append(values, value)
+		}
+	}
+
+	sort.Strings(values)
+	return values
+}
+
+func getIncreasedPort(ports []string, host, defaultPort string) int {
+	var port int
+
+	if len(ports) == 0 {
+		port, _ = strconv.Atoi(defaultPort)
+		return port
+	} else {
+		port, _ = strconv.Atoi(ports[len(ports)-1])
+		port++
+		for {
+			port_tmp, _ := getFreePort(host, port)
+
+			if port_tmp != port {
+				port++
+			} else {
+				return port
+			}
+		}
+	}
+}
+
+func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
+	guiPorts := s.fromAllConfigXml(getSyncthingGuiPort)
+	guiPort := strconv.Itoa(getIncreasedPort(guiPorts, "127.0.0.1", "8384"))
+
+	protocolPorts := s.fromAllConfigXml(getSyncthingProtocolPort)
+	protocolPort := strconv.Itoa(getIncreasedPort(protocolPorts, "0.0.0.0", "22000"))
+
+	qs := r.URL.Query()
+	path := qs.Get("path")
+	xmlDir := filepath.FromSlash(path + "/" + SYNCTHING_CONFIG_DIR)
+	os.MkdirAll(xmlDir, 0775)
+	runCmd(binDir, filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
+
+	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
+	setSyncthingGuiPort(xmlPath, guiPort)
+	setSyncthingProtocolPort(xmlPath, protocolPort)
 }
 
 func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {

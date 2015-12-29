@@ -3,12 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/thejerf/suture"
-	"github.com/wuxicn/pipeline"
 )
 
 var (
@@ -20,6 +19,8 @@ const (
 	guiAddress = "127.0.0.1:7777"
 
 	CONFIG_JSON = "synciot.json"
+
+	SYNCTHING_CONFIG_DIR = "sync-config"
 )
 
 type FolderConfiguration struct {
@@ -74,21 +75,6 @@ func synciotMain() {
 
 	setupGUI(mainSvc)
 
-	stdout, stderr, err := pipeline.Run(
-		exec.Command("echo", "Hello", "World"),
-		exec.Command("sed", "s/World/Golang/"))
-
-	fmt.Println("STDOUT:")
-	fmt.Println(stdout.String())
-
-	fmt.Println("STDERR:")
-	fmt.Println(stderr.String())
-
-	if err != nil {
-		e := err.(*pipeline.Error)
-		fmt.Println("ERR:", e.Code, e.Err)
-	}
-
 	<-quitChan
 	mainSvc.Stop()
 }
@@ -102,7 +88,28 @@ func setupGUI(mainSvc *suture.Supervisor) {
 		fmt.Println("Cannot start GUI:", err)
 	} else {
 		fmt.Println("Starting GUI from", assets)
-		fmt.Println("API listening on", guiAddress)
+		fmt.Println("Synciot listening on", guiAddress)
 	}
 	mainSvc.Add(api)
+}
+
+// getFreePort returns a free TCP port fort listening on. The ports given are
+// tried in succession and the first to succeed is returned. If none succeed,
+// a random high port is returned.
+func getFreePort(host string, ports ...int) (int, error) {
+	for _, port := range ports {
+		c, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+		if err == nil {
+			c.Close()
+			return port, nil
+		}
+	}
+
+	c, err := net.Listen("tcp", host+":0")
+	if err != nil {
+		return 0, err
+	}
+	addr := c.Addr().(*net.TCPAddr)
+	c.Close()
+	return addr.Port, nil
 }
