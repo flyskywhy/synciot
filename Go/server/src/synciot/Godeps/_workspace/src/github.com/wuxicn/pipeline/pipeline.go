@@ -99,7 +99,7 @@ func Run(cmds ...*exec.Cmd) (stdout, stderr *bytes.Buffer, finErr error) {
 
     // Wait for each command(in reverse order) to complete
     for i := last; i >= 0; i -= 1 {
-        cmd := &cmds[i]
+        cmd := cmds[i]
         if err := cmd.Wait(); err != nil {
             if exiterr, ok := err.(*exec.ExitError); ok {
                 // The program has exited with an exit code != 0
