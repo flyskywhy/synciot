@@ -87,6 +87,20 @@ angular.module('synciot.core')
             return state;
         };
 
+        $scope.syncthingGuiAddress = function (folderCfg) {
+            if (typeof $scope.model[folderCfg.id] === 'undefined') {
+                return 'unknown';
+            }
+
+            if (!$scope.model[folderCfg.id].syncthingGuiPort) {
+                return 'unknown';
+            }
+
+            var address = $location.protocol() + '://' + $location.host() + ':' + $scope.model[folderCfg.id].syncthingGuiPort;
+
+            return address;
+        };
+
         $scope.thisDeviceName = function () {
             return $scope.deviceName;
         };

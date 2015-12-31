@@ -79,6 +79,10 @@
                                 <th><span class="fa fa-fw fa-folder-open"></span>&nbsp;<span translate>Folder Path</span></th>
                                 <td class="text-right">{{folder.path}}</td>
                             </tr>
+                            <tr ng-if="model[folder.id].syncthingGuiPort">
+                                <th><span class="fa fa-fw fa-globe"></span>&nbsp;<span translate>Syncthing</span> <span translate>GUI Listen Addresses</span></th>
+                                <td class="text-right"><a class="navbar-link" href={{syncthingGuiAddress(folder)}} target="_blank">{{syncthingGuiAddress(folder)}}</a></td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>

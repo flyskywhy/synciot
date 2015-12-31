@@ -148,6 +148,8 @@ func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
 
 	if syncthingGuiPort == "" {
 		return res
+	} else {
+		res["syncthingGuiPort"] = syncthingGuiPort
 	}
 
 	req, err := http.NewRequest("GET", "http://127.0.0.1:"+syncthingGuiPort+"/rest/system/ping", nil)
