@@ -176,12 +176,16 @@ angular.module('synciot.core')
             $('#about').modal('show');
         };
 
-        $scope.stopSyncthing = function (folder) {
-            $scope.model[folder].state = 'stopped';
+        $scope.stopSyncthing = function (folderCfg) {
+            $http.post(urlbase + "/system/stop?folder=" + encodeURIComponent(folderCfg.id)).success(function () {
+                $scope.model[folderCfg.id].state = 'stopped';
+            }).error($scope.emitHTTPError);
         };
 
-        $scope.startSyncthing = function (folder) {
-            $scope.model[folder].state = 'running';
+        $scope.startSyncthing = function (folderCfg) {
+            $http.post(urlbase + '/system/start?folder=' + encodeURIComponent(folderCfg.id)).success(function () {
+                $scope.model[folderCfg.id].state = 'running';
+            }).error($scope.emitHTTPError);
         };
 
         // pseudo main. called on all definitions assigned

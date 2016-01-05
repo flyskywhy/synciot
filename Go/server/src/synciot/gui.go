@@ -17,18 +17,19 @@ import (
 )
 
 type apiSvc struct {
-	cfg      *Configuration
-	assetDir string
-	model    *Model
-	cfgPath  string
-	listener net.Listener
-	stop     chan struct{}
+	cfg       *Configuration
+	assetDir  string
+	cmdServer map[string]*CmdServer
+	cfgPath   string
+	listener  net.Listener
+	stop      chan struct{}
 }
 
 func newAPISvc(assets, config, address string) (*apiSvc, error) {
 	svc := &apiSvc{
-		assetDir: assets,
-		cfgPath:  config,
+		assetDir:  assets,
+		cmdServer: make(map[string]*CmdServer),
+		cfgPath:   config,
 	}
 
 	var err error
@@ -49,6 +50,8 @@ func (s *apiSvc) Serve() {
 	postRestMux := http.NewServeMux()
 	postRestMux.HandleFunc("/rest/system/config", s.postSystemConfig)
 	postRestMux.HandleFunc("/rest/system/generate", s.postGenFolder)
+	postRestMux.HandleFunc("/rest/system/start", s.postStartFolder)
+	postRestMux.HandleFunc("/rest/system/stop", s.postStopFolder)
 
 	// A handler that splits requests between the two above and disables
 	// caching
@@ -142,6 +145,7 @@ func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
 		for _, rf := range s.cfg.Folders {
 			if rf.ID == folder {
 				syncthingGuiPort = getSyncthingGuiPort(filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
+				break
 			}
 		}
 	}
@@ -312,11 +316,69 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	path := qs.Get("path")
 	xmlDir := filepath.FromSlash(path + "/" + SYNCTHING_CONFIG_DIR)
 	os.MkdirAll(xmlDir, 0775)
-	runCmd(binDir, filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
+
+	cmd := exec.Command(filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(out))
 
 	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
 	setSyncthingGuiPort(xmlPath, guiPort)
 	setSyncthingProtocolPort(xmlPath, protocolPort)
+}
+
+func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	folder := qs.Get("folder")
+
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == folder {
+				xmlDir := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR)
+				xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
+				_, err := os.Stat(xmlPath)
+				if err == nil {
+					port := getSyncthingGuiPort(xmlPath)
+
+					cmd := newCmdServer(binDir, filepath.Join(binDir, "syncthing"), "-no-browser", "-no-restart", "-gui-address=127.0.0.1:"+port, "-home="+xmlDir)
+					s.cmdServer[rf.ID] = cmd
+					cmd.Serve()
+
+					return
+				} else {
+					fmt.Println(err)
+					http.Error(w, err.Error(), 500)
+					return
+				}
+
+			}
+		}
+	}
+}
+
+func (s *apiSvc) postStopFolder(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	folder := qs.Get("folder")
+
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == folder {
+				cmd := s.cmdServer[rf.ID]
+				if cmd != nil {
+					cmd.Stop()
+					return
+				} else {
+					fmt.Println("Warning: No cmdServer with folder", rf.ID)
+					return
+				}
+
+			}
+		}
+	}
 }
 
 func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {

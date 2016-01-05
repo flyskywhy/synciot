@@ -32,12 +32,9 @@ type Configuration struct {
 	Folders []FolderConfiguration `json:"folders"`
 }
 
-type Model struct {
-	State string `json:"state"`
-}
-
 var (
 	binDir   string
+	mainSvc  = suture.NewSimple("main")
 	quitChan chan os.Signal
 )
 
@@ -48,6 +45,8 @@ var (
 
 func init() {
 	Version = "0.1"
+
+	mainSvc.ServeBackground()
 }
 
 func main() {
@@ -70,16 +69,13 @@ func main() {
 }
 
 func synciotMain() {
-	mainSvc := suture.NewSimple("main")
-	mainSvc.ServeBackground()
-
-	setupGUI(mainSvc)
+	setupGUI()
 
 	<-quitChan
 	mainSvc.Stop()
 }
 
-func setupGUI(mainSvc *suture.Supervisor) {
+func setupGUI() {
 	assets := filepath.Join(binDir, guiAssets)
 	config := filepath.Join(binDir, CONFIG_JSON)
 

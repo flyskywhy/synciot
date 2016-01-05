@@ -11,58 +11,78 @@ import (
 )
 
 var (
-	stdoutFirstLines []string // The first 10 lines of stdout
-	stdoutLastLines  []string // The last 50 lines of stdout
-	stdoutMut        = &sync.Mutex{}
+	stdoutMut = &sync.Mutex{}
 )
 
-func runCmd(workDir, bin string, arg ...string) {
+type CmdServer struct {
+	exit             chan error
+	cmd              *exec.Cmd
+	stdoutFirstLines []string // The first 10 lines of stdout
+	stdoutLastLines  []string // The last 50 lines of stdout
+}
+
+func newCmdServer(workDir, bin string, arg ...string) *CmdServer {
+	svr := &CmdServer{}
+
+	svr.exit = make(chan error)
+
+	svr.cmd = exec.Command(bin, arg...)
+	svr.cmd.Dir = workDir
+
+	return svr
+}
+
+func (s *CmdServer) Serve() {
 	var dst io.Writer = os.Stdout
 
-	cmd := exec.Command(bin, arg...)
-	cmd.Dir = workDir
-
-	stderr, err := cmd.StderrPipe()
+	stderr, err := s.cmd.StderrPipe()
 	if err != nil {
 		fmt.Println("stderr:", err)
 	}
 
-	stdout, err := cmd.StdoutPipe()
+	stdout, err := s.cmd.StdoutPipe()
 	if err != nil {
 		fmt.Println("stdout:", err)
 	}
 
-	fmt.Println("Starting", cmd.Args)
-	err = cmd.Start()
+	fmt.Println("Starting", s.cmd.Args)
+	err = s.cmd.Start()
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	stdoutMut.Lock()
-	stdoutFirstLines = make([]string, 0, 10)
-	stdoutLastLines = make([]string, 0, 50)
+	s.stdoutFirstLines = make([]string, 0, 10)
+	s.stdoutLastLines = make([]string, 0, 50)
 	stdoutMut.Unlock()
 
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
 	go func() {
-		copyStderr(stderr, dst)
+		s.copyStderr(stderr, dst)
 		wg.Done()
 	}()
 
 	wg.Add(1)
 	go func() {
-		copyStdout(stdout, dst)
+		s.copyStdout(stdout, dst)
 		wg.Done()
 	}()
 
-	wg.Wait()
-	cmd.Wait()
-	fmt.Println(cmd.Args, "exited")
+	go func() {
+		wg.Wait()
+		s.exit <- s.cmd.Wait()
+	}()
 }
 
-func copyStderr(stderr io.Reader, dst io.Writer) {
+func (s *CmdServer) Stop() {
+	s.cmd.Process.Kill()
+	<-s.exit
+	fmt.Println(s.cmd.Args, "exited")
+}
+
+func (s *CmdServer) copyStderr(stderr io.Reader, dst io.Writer) {
 	br := bufio.NewReader(stderr)
 
 	var panicFd *os.File
@@ -84,7 +104,7 @@ func copyStderr(stderr io.Reader, dst io.Writer) {
 	}
 }
 
-func copyStdout(stdout io.Reader, dst io.Writer) {
+func (s *CmdServer) copyStdout(stdout io.Reader, dst io.Writer) {
 	br := bufio.NewReader(stdout)
 	for {
 		line, err := br.ReadString('\n')
@@ -93,13 +113,13 @@ func copyStdout(stdout io.Reader, dst io.Writer) {
 		}
 
 		stdoutMut.Lock()
-		if len(stdoutFirstLines) < cap(stdoutFirstLines) {
-			stdoutFirstLines = append(stdoutFirstLines, line)
+		if len(s.stdoutFirstLines) < cap(s.stdoutFirstLines) {
+			s.stdoutFirstLines = append(s.stdoutFirstLines, line)
 		} else {
-			if l := len(stdoutLastLines); l == cap(stdoutLastLines) {
-				stdoutLastLines = stdoutLastLines[:l-1]
+			if l := len(s.stdoutLastLines); l == cap(s.stdoutLastLines) {
+				s.stdoutLastLines = s.stdoutLastLines[:l-1]
 			}
-			stdoutLastLines = append(stdoutLastLines, line)
+			s.stdoutLastLines = append(s.stdoutLastLines, line)
 		}
 		stdoutMut.Unlock()
 
