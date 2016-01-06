@@ -23,9 +23,9 @@ public class Synciot {
 
     private static String dataPath;
     private static final String ORIGIN_SYNC_PATH = "/data/Sync";
-    private static final String SYNC_PATH = "/sdcard/iot/Sync";
-    private static final String SYNC_TEMP_PATH = "/sdcard/iot/SyncTemp";
-    private static final String SYNCTHING_CONFIG_PATH = "/sdcard/iot/sync-config";
+    private static final String SYNC_PATH = "/sdcard/synciot/sync";
+    private static final String SYNC_TEMP_PATH = "/sdcard/synciot/sync-temp";
+    private static final String SYNCTHING_CONFIG_PATH = "/sdcard/synciot/config";
 
     private static final String ASSETS_SYNCTHING = "syncthing";
     private static String syncthing;

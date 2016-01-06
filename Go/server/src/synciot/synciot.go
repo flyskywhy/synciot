@@ -20,7 +20,7 @@ const (
 
 	CONFIG_JSON = "synciot.json"
 
-	SYNCTHING_CONFIG_DIR = "sync-config"
+	SYNCTHING_CONFIG_DIR = "config"
 )
 
 type FolderConfiguration struct {
