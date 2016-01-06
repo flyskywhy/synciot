@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -263,6 +264,21 @@ func setSyncthingProtocolPort(path string, port string) {
 	}
 }
 
+func setSyncthingFolderConnector(synciotDir string) {
+	xmlDir := filepath.FromSlash(synciotDir + "/" + SYNCTHING_CONFIG_DIR)
+	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
+
+	_, err := os.Stat(xmlPath)
+	if err != nil {
+		return
+	}
+
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile("id=\"default\" path=\".*\" ro=")
+	buf = reg.ReplaceAll(buf, []byte("id=\"connector\" path=\""+synciotDir+string(filepath.Separator)+"connector\" ro="))
+	ioutil.WriteFile(xmlPath, buf, 0644)
+}
+
 func (s *apiSvc) fromAllConfigXml(get func(string) string) []string {
 	var values []string
 	var value string
@@ -313,8 +329,8 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	protocolPort := strconv.Itoa(getIncreasedPort(protocolPorts, "0.0.0.0", "22000"))
 
 	qs := r.URL.Query()
-	path := qs.Get("path")
-	xmlDir := filepath.FromSlash(path + "/" + SYNCTHING_CONFIG_DIR)
+	synciotDir := qs.Get("path")
+	xmlDir := filepath.FromSlash(synciotDir + "/" + SYNCTHING_CONFIG_DIR)
 	os.MkdirAll(xmlDir, 0775)
 
 	cmd := exec.Command(filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
@@ -327,6 +343,8 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
 	setSyncthingGuiPort(xmlPath, guiPort)
 	setSyncthingProtocolPort(xmlPath, protocolPort)
+	os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
+	setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
 }
 
 func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
