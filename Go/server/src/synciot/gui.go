@@ -279,6 +279,20 @@ func setSyncthingFolderConnector(synciotDir string) {
 	ioutil.WriteFile(xmlPath, buf, 0644)
 }
 
+func setSyncthingMisc(xmlPath string) {
+	_, err := os.Stat(xmlPath)
+	if err != nil {
+		return
+	}
+
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile("urAccepted>0")
+	buf = reg.ReplaceAll(buf, []byte("urAccepted>-1"))
+	reg = regexp.MustCompile("autoUpgradeIntervalH>12")
+	buf = reg.ReplaceAll(buf, []byte("autoUpgradeIntervalH>0"))
+	ioutil.WriteFile(xmlPath, buf, 0644)
+}
+
 func (s *apiSvc) fromAllConfigXml(get func(string) string) []string {
 	var values []string
 	var value string
@@ -345,6 +359,7 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	setSyncthingProtocolPort(xmlPath, protocolPort)
 	os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
 	setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
+	setSyncthingMisc(xmlPath)
 }
 
 func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
