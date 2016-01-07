@@ -13,8 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/wuxicn/pipeline"
 )
 
 type apiSvc struct {
@@ -179,89 +177,66 @@ func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSyncthingGuiPort(path string) string {
+func getSyncthingGuiPort(xmlPath string) string {
 	port := ""
 
-	_, err := os.Stat(path)
+	_, err := os.Stat(xmlPath)
 	if err != nil {
 		return port
 	}
 
-	stdout, _, err := pipeline.Run(
-		exec.Command("grep", "address", path),
-		exec.Command("tail", "-1"),
-		exec.Command("sed", "s/.*<address>.*://"),
-		exec.Command("sed", "s/<\\/address>.*//"),
-		exec.Command("tr", "-d", "\\\"[\\n][\\r]\\\""))
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile(".*<address>.*")
+	addr := string(reg.FindAll(buf, -1)[1]) // the second <address> is GUI ip:port, so be [1] here
+	reg = regexp.MustCompile(".*<address>.*:|</address>.*")
+	port = reg.ReplaceAllString(addr, "")
 
-	if err != nil {
-		e := err.(*pipeline.Error)
-		fmt.Println("ERR:", e.Code, e.Err)
-		return port
-	}
-
-	port = stdout.String()
 	return port
 }
 
-func getSyncthingProtocolPort(path string) string {
+func getSyncthingProtocolPort(xmlPath string) string {
 	port := ""
 
-	_, err := os.Stat(path)
+	_, err := os.Stat(xmlPath)
 	if err != nil {
 		return port
 	}
 
-	stdout, _, err := pipeline.Run(
-		exec.Command("grep", "listenAddress", path),
-		exec.Command("sed", "s/.*<listenAddress>.*://"),
-		exec.Command("sed", "s/<\\/listenAddress>.*//"),
-		exec.Command("tr", "-d", "\\\"[\\n][\\r]\\\""))
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile(".*<listenAddress>.*")
+	addr := string(reg.FindAll(buf, -1)[0]) // the first <listenAddress> is Protocol ip:port, so be [0] here
+	reg = regexp.MustCompile(".*<listenAddress>.*:|</listenAddress>.*")
+	port = reg.ReplaceAllString(addr, "")
 
-	if err != nil {
-		e := err.(*pipeline.Error)
-		fmt.Println("ERR:", e.Code, e.Err)
-		return port
-	}
-
-	port = stdout.String()
 	return port
 }
 
-func setSyncthingGuiPort(path string, port string) {
-	_, err := os.Stat(path)
+func setSyncthingGuiPort(xmlPath string, port string) {
+	_, err := os.Stat(xmlPath)
 	if err != nil {
 		return
 	}
 
-	oldPort := getSyncthingGuiPort(path)
+	oldPort := getSyncthingGuiPort(xmlPath)
 
-	_, _, err = pipeline.Run(
-		exec.Command("sed", "-i", "s/:"+oldPort+"<\\/address>/:"+port+"<\\/address>/", path))
-
-	if err != nil {
-		e := err.(*pipeline.Error)
-		fmt.Println("ERR:", e.Code, e.Err)
-		return
-	}
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile(":" + oldPort + "</address>")
+	buf = reg.ReplaceAll(buf, []byte(":"+port+"</address>"))
+	ioutil.WriteFile(xmlPath, buf, 0644)
 }
 
-func setSyncthingProtocolPort(path string, port string) {
-	_, err := os.Stat(path)
+func setSyncthingProtocolPort(xmlPath string, port string) {
+	_, err := os.Stat(xmlPath)
 	if err != nil {
 		return
 	}
 
-	oldPort := getSyncthingProtocolPort(path)
+	oldPort := getSyncthingProtocolPort(xmlPath)
 
-	_, _, err = pipeline.Run(
-		exec.Command("sed", "-i", "s/:"+oldPort+"<\\/listenAddress>/:"+port+"<\\/listenAddress>/", path))
-
-	if err != nil {
-		e := err.(*pipeline.Error)
-		fmt.Println("ERR:", e.Code, e.Err)
-		return
-	}
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile(":" + oldPort + "</listenAddress>")
+	buf = reg.ReplaceAll(buf, []byte(":"+port+"</listenAddress>"))
+	ioutil.WriteFile(xmlPath, buf, 0644)
 }
 
 func setSyncthingFolderConnector(synciotDir string) {
