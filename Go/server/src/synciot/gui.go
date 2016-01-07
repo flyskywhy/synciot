@@ -361,7 +361,6 @@ func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, err.Error(), 500)
 					return
 				}
-
 			}
 		}
 	}
@@ -381,9 +380,9 @@ func (s *apiSvc) postStopFolder(w http.ResponseWriter, r *http.Request) {
 					return
 				} else {
 					fmt.Println("Warning: No cmdServer with folder", rf.ID)
+					http.Error(w, "Warning: No cmdServer with folder"+rf.ID, 500)
 					return
 				}
-
 			}
 		}
 	}

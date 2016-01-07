@@ -113,6 +113,7 @@ angular.module('synciot.core')
                 }
             };
             $http.post(urlbase + '/system/config', cfg, opts).success(function () {
+                refreshConfig();
             }).error($scope.emitHTTPError);
         };
 
@@ -155,9 +156,9 @@ angular.module('synciot.core')
             $scope.config.folders = folderList($scope.folders);
 
             $http.post(urlbase + '/system/generate?path=' + encodeURIComponent(folderCfg.path)).success(function () {
+                $scope.saveConfig();
             }).error($scope.emitHTTPError);
 
-            $scope.saveConfig();
         };
 
         $scope.deleteFolder = function (id) {
