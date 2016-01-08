@@ -186,10 +186,11 @@ func getSyncthingGuiPort(xmlPath string) string {
 	}
 
 	buf, _ := ioutil.ReadFile(xmlPath)
-	reg := regexp.MustCompile(".*<address>.*")
-	addr := string(reg.FindAll(buf, -1)[1]) // the second <address> is GUI ip:port, so be [1] here
-	reg = regexp.MustCompile(".*<address>.*:|</address>.*")
+	reg := regexp.MustCompile("<gui enabled.*\\s.*<address>.*")
+	addr := string(reg.Find(buf))
+	reg = regexp.MustCompile("<gui enabled.*\\s.*<address>.*:|</address>.*")
 	port = reg.ReplaceAllString(addr, "")
+
 
 	return port
 }
@@ -204,7 +205,7 @@ func getSyncthingProtocolPort(xmlPath string) string {
 
 	buf, _ := ioutil.ReadFile(xmlPath)
 	reg := regexp.MustCompile(".*<listenAddress>.*")
-	addr := string(reg.FindAll(buf, -1)[0]) // the first <listenAddress> is Protocol ip:port, so be [0] here
+	addr := string(reg.Find(buf))
 	reg = regexp.MustCompile(".*<listenAddress>.*:|</listenAddress>.*")
 	port = reg.ReplaceAllString(addr, "")
 
