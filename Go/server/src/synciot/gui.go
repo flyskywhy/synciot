@@ -313,10 +313,6 @@ func getIncreasedPort(ports []string, host, defaultPort string) int {
 func genUserHtml(user string) {
 	userHtml := filepath.FromSlash(binDir + "/gui/user-" + user + ".html")
 	Copy(filepath.FromSlash(binDir+"/gui/user.html"), userHtml)
-	buf, _ := ioutil.ReadFile(userHtml)
-	reg := regexp.MustCompile("SERVER_NAME")
-	buf = reg.ReplaceAll(buf, []byte(user))
-	ioutil.WriteFile(userHtml, buf, 0644)
 }
 
 func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {

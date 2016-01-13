@@ -36,6 +36,11 @@ angular.module('user.core')
             return $location.protocol() + '://' + $location.host() + ':' + $location.port();
         };
 
+        $scope.thisServerId = function () {
+            var path = $location.path()
+            return path.substr(6, path.length-11);
+        };
+
         $scope.thisPageName = function () {
             return $scope.pageName;
         };
