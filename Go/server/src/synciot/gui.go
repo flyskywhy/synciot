@@ -191,7 +191,6 @@ func getSyncthingGuiPort(xmlPath string) string {
 	reg = regexp.MustCompile("<gui enabled.*\\s.*<address>.*:|</address>.*")
 	port = reg.ReplaceAllString(addr, "")
 
-
 	return port
 }
 
@@ -311,6 +310,15 @@ func getIncreasedPort(ports []string, host, defaultPort string) int {
 	}
 }
 
+func genUserHtml(user string) {
+	userHtml := filepath.FromSlash(binDir + "/gui/user-" + user + ".html")
+	Copy(filepath.FromSlash(binDir+"/gui/user.html"), userHtml)
+	buf, _ := ioutil.ReadFile(userHtml)
+	reg := regexp.MustCompile("SERVER_NAME")
+	buf = reg.ReplaceAll(buf, []byte(user))
+	ioutil.WriteFile(userHtml, buf, 0644)
+}
+
 func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	guiPorts := s.fromAllConfigXml(getSyncthingGuiPort)
 	guiPort := strconv.Itoa(getIncreasedPort(guiPorts, "127.0.0.1", "8384"))
@@ -336,6 +344,8 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
 	setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
 	setSyncthingMisc(xmlPath)
+
+	genUserHtml(qs.Get("id"))
 }
 
 func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {

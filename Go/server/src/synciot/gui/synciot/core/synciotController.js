@@ -18,7 +18,7 @@ angular.module('synciot.core')
         $scope.config = {};
         $scope.configInSync = true;
         $scope.model = {};
-        $scope.deviceName = "(server)";
+        $scope.pageName = "Administrator";
         $scope.folders = {};
 
         $scope.emitHTTPError = function (data, status, headers, config) {
@@ -101,8 +101,14 @@ angular.module('synciot.core')
             return address;
         };
 
-        $scope.thisDeviceName = function () {
-            return $scope.deviceName;
+        $scope.userGuiAddress = function (folderCfg) {
+            var address = $location.protocol() + '://' + $location.host() + ':' + $location.port() + '/user-' + folderCfg.id + '.html';
+
+            return address;
+        };
+
+        $scope.thisPageName = function () {
+            return $scope.pageName;
         };
 
         $scope.saveConfig = function () {
@@ -155,7 +161,8 @@ angular.module('synciot.core')
             $scope.folders[folderCfg.id] = folderCfg;
             $scope.config.folders = folderList($scope.folders);
 
-            $http.post(urlbase + '/system/generate?path=' + encodeURIComponent(folderCfg.path)).success(function () {
+            $http.post(urlbase + '/system/generate?path=' + encodeURIComponent(folderCfg.path)
+                                                 + ';id=' + encodeURIComponent(folderCfg.id)).success(function () {
                 $scope.saveConfig();
             }).error($scope.emitHTTPError);
 

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+// Copyright (C) 2015 Synciot
+
+-->
+<html lang="en" ng-app="user" ng-controller="UserController" class="ng-cloak">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="assets/img/favicon.png">
+
+    <title ng-bind="thisPageName() + ' | Synciot'"></title>
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/font/raleway.css" rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="assets/css/overrides.css" rel="stylesheet">
+</head>
+
+<body>
+<!-- Top bar -->
+
+<nav class="navbar navbar-top navbar-default" role="navigation">
+    <div class="container">
+        <span class="navbar-brand"><img class="logo" src="assets/img/logo-horizontal.svg" height="32" width="117"/></span>
+        <p class="navbar-text hidden-xs" ng-class=>SERVER_NAME</p>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="fa fa-cog"></span>&nbsp;<span translate>Actions</span> <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="" ng-click="about()"><span class="fa fa-fw fa-heart-o"></span>&nbsp;<span translate>About</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container" id="content">
+
+    <!-- Client list -->
+
+    <!-- Client operations -->
+
+    <div class="col-md-6">
+        <h3 translate>Clients</h3>
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" href="#client-this" style="cursor: pointer">
+                <span class="pull-left">
+                    <button type="button" class="btn btn-sm btn-default" ng-click="stopClient(clients)">
+                        <span class="fa fa-power-off"></span>&nbsp;<span translate>0</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-default" ng-click="startClient(clients)">
+                        <span class="fa fa-power-off"></span>&nbsp;<span translate>1</span>
+                    </button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div> <!-- /container -->
+
+<!-- Bottom bar -->
+
+<nav class="navbar navbar-default navbar-fixed-bottom">
+    <div class="container">
+        <ul class="nav navbar-nav">
+            <li><a class="navbar-link" href={{administratorGuiAddress()}} target="_blank"><span class="fa fa-wrench"></span>&nbsp;<span translate>Administrator</span></a></li>
+        </ul>
+    </div>
+</nav>
+
+<div about-modal></div>
+
+<!-- vendor scripts -->
+<script src="vendor/jquery/jquery-2.0.3.min.js"></script>
+<script src="vendor/angular/angular.min.js"></script>
+<script src="vendor/angular/angular-translate.min.js"></script>
+<script src="vendor/angular/angular-translate-loader.min.js"></script>
+<script src="vendor/angular/angular-dirPagination.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!-- / vendor scripts -->
+
+<!-- gui application code -->
+<script src="user/core/module.js"></script>
+<script src="user/core/aboutModalDirective.js"></script>
+<script src="user/core/modalDirective.js"></script>
+<script src="user/core/userController.js"></script>
+
+<script src="assets/lang/valid-langs.js"></script>
+<script src="assets/lang/prettyprint.js"></script>
+<script src="user/app.js"></script>
+<!-- / gui application code -->
+
+</body>
+</html>

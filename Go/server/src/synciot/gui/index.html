@@ -12,7 +12,7 @@
     <meta name="author" content="">
     <link rel="shortcut icon" href="assets/img/favicon.png">
 
-    <title ng-bind="thisDeviceName() + ' | Synciot'"></title>
+    <title ng-bind="thisPageName() + ' | Synciot'"></title>
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/font/raleway.css" rel="stylesheet">
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -60,10 +60,10 @@
         </div>
     </div>
 
-    <!-- Folder list (top left) -->
+    <!-- Server list -->
 
     <div class="col-md-6">
-        <h3 translate>Folders</h3>
+        <h3 translate>Servers</h3>
         <div class="panel-group" id="folders">
             <div class="panel panel-default" ng-repeat="folder in folderList()">
                 <div class="panel-heading" data-toggle="collapse" data-parent="#folders" href="#folder-{{$index}}" style="cursor: pointer">
@@ -82,6 +82,10 @@
                             <tr ng-if="model[folder.id].syncthingGuiPort">
                                 <th><span class="fa fa-fw fa-globe"></span>&nbsp;<span translate>Syncthing</span> <span translate>GUI Listen Addresses</span></th>
                                 <td class="text-right"><a class="navbar-link" href={{syncthingGuiAddress(folder)}} target="_blank">{{syncthingGuiAddress(folder)}}</a></td>
+                            </tr>
+                            <tr>
+                                <th><span class="fa fa-fw fa-globe"></span>&nbsp;<span translate>User</span> <span translate>GUI Listen Addresses</span></th>
+                                <td class="text-right"><a class="navbar-link" href={{userGuiAddress(folder)}} target="_blank">{{userGuiAddress(folder)}}</a></td>
                             </tr>
                             </tbody>
                         </table>
