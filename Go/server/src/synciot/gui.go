@@ -42,6 +42,8 @@ func (s *apiSvc) Serve() {
 	// The GET handlers
 	getRestMux := http.NewServeMux()
 	getRestMux.HandleFunc("/rest/stats/folder", s.getFolderStats)
+	getRestMux.HandleFunc("/rest/client/config", s.getClientConfig)
+	getRestMux.HandleFunc("/rest/client/status", s.getClientStatus)
 	getRestMux.HandleFunc("/rest/system/config", s.getSystemConfig)
 	getRestMux.HandleFunc("/rest/system/status", s.getSystemStatus)
 
@@ -103,6 +105,103 @@ func noCacheMiddleware(h http.Handler) http.Handler {
 	})
 }
 
+type SyncthingSystemStatusConfiguration struct {
+	MyID string `json:"myID"`
+}
+
+func getSyncthingMyId(xmlPath string) string {
+	myID := ""
+	url := "http://127.0.0.1:" + getSyncthingGuiPort(xmlPath) + "/rest/system/status"
+
+	req, err := http.NewRequest("GET", url, nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		//fmt.Println("http.Do failed,[err=%s][url=%s]", err, url)
+		return myID
+	}
+	defer resp.Body.Close()
+
+	var cfg SyncthingSystemStatusConfiguration
+	err = json.NewDecoder(resp.Body).Decode(&cfg)
+	if err != nil {
+		//fmt.Println("decoding posted config:", err)
+		return myID
+	}
+
+	myID = cfg.MyID
+
+	return myID
+}
+
+type ClientConfiguration struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type UserConfiguration struct {
+	Clients []ClientConfiguration `json:"clients"`
+}
+
+func getSyncthingRemoteDevices(xmlPath string) []ClientConfiguration {
+	var client ClientConfiguration
+	var clients []ClientConfiguration
+	id := ""
+	myID := getSyncthingMyId(xmlPath)
+
+	if myID == "" {
+		return clients
+	}
+
+	buf, _ := ioutil.ReadFile(xmlPath)
+	reg := regexp.MustCompile(".*<device id=\".*\" name=.*")
+	devices := reg.FindAllString(string(buf), -1)
+	for _, rf := range devices {
+		reg = regexp.MustCompile(".*<device id=\"|\" name=.*")
+		id = reg.ReplaceAllString(rf, "")
+		if id != myID {
+			client.ID = id
+			reg = regexp.MustCompile(".*\" name=\"|\" compression=.*")
+			client.Name = reg.ReplaceAllString(rf, "")
+			clients = append(clients, client)
+		}
+	}
+
+	return clients
+}
+
+func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	server := qs.Get("server")
+
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == server {
+				xmlDir := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR)
+				xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
+				_, err := os.Stat(xmlPath)
+				if err == nil {
+					var cfg UserConfiguration
+					cfg.Clients = getSyncthingRemoteDevices(xmlPath)
+
+					w.Header().Set("Content-Type", "application/json; charset=utf-8")
+					json.NewEncoder(w).Encode(cfg)
+
+					return
+				} else {
+					fmt.Println(err)
+					http.Error(w, err.Error(), 500)
+					return
+				}
+			}
+		}
+	}
+}
+
+func (s *apiSvc) getClientStatus(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {
 	cfg, err := ioutil.ReadFile(s.cfgPath)
 
@@ -156,9 +255,10 @@ func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
 	}
 
 	req, err := http.NewRequest("GET", "http://127.0.0.1:"+syncthingGuiPort+"/rest/system/ping", nil)
-	_, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err == nil {
 		res["state"] = "running"
+		defer resp.Body.Close()
 	} else {
 		res["state"] = "stopped"
 	}
