@@ -19,6 +19,9 @@ angular.module('user.core')
         $scope.model = {};
         $scope.pageName = "User";
         $scope.clients = {};
+        $scope.clientList = [];
+        $scope.checkboxMasterDisplay = true;
+        $scope.checkboxMasterLogical = true;
 
         $scope.emitHTTPError = function (data, status, headers, config) {
             $scope.$emit('HTTPError', {data: data, status: status, headers: headers, config: config});
@@ -44,6 +47,11 @@ angular.module('user.core')
 
             $scope.config = config;
             $scope.clients = clientMap($scope.config.clients);
+            $scope.clientList = clientList($scope.clients);
+            $scope.clientList.forEach(function (client) {
+                client.checkboxSlaveDisplay = true;
+                client.checkboxSlaveLogical = true;
+            });
             Object.keys($scope.clients).forEach(function (client) {
                 refreshClient(client);
             });
@@ -85,10 +93,6 @@ angular.module('user.core')
             return $scope.pageName;
         };
 
-        $scope.clientList = function (server) {
-            return clientList($scope.clients);
-        };
-
         $scope.about = function () {
             $('#about').modal('show');
         };
@@ -97,6 +101,32 @@ angular.module('user.core')
         };
 
         $scope.startClient = function (clients) {
+        };
+
+        $scope.checkboxAll = function () {
+            if ($scope.checkboxMasterLogical == true) {
+                $scope.checkboxMasterLogical = false;
+                $scope.clientList.forEach(function (client) {
+                    client.checkboxSlaveDisplay = false;
+                    client.checkboxSlaveLogical = false;
+                });
+            } else {
+                $scope.checkboxMasterLogical = true;
+                $scope.clientList.forEach(function (client) {
+                    client.checkboxSlaveDisplay = true;
+                    client.checkboxSlaveLogical = true;
+                });
+            }
+        };
+
+        $scope.checkboxOne = function (client) {
+            $scope.checkboxMasterDisplay = false
+            $scope.checkboxMasterLogical = false;
+            if (client.checkboxSlaveLogical == true) {
+                client.checkboxSlaveLogical = false;
+            } else {
+                client.checkboxSlaveLogical = true;
+            }
         };
 
         // pseudo main. called on all definitions assigned

@@ -46,6 +46,7 @@
     <div class="col-md-12">
         <h3 translate>Clients</h3>
         <div class="panel panel-default">
+            <input type="checkbox" ng-model="checkboxMasterDisplay" ng-click="checkboxAll()"><span translate>Select all</span>
             <div class="panel-heading" data-toggle="collapse" href="#client-this" style="cursor: pointer">
                 <span class="pull-left">
                     <button type="button" class="btn btn-sm btn-default" ng-click="stopClient(clients)">
@@ -61,7 +62,8 @@
         <!-- Clients -->
 
         <div class="panel-group" id="clients">
-            <div class="panel panel-default" ng-repeat="client in clientList(thisServerId())">
+            <div class="panel panel-default" ng-repeat="client in clientList">
+                <input id="checkbox-{{$index}}" type="checkbox" ng-model="client.checkboxSlaveDisplay" ng-click="checkboxOne(client)"><span translate>Select</span>
                 <div class="panel-heading" data-toggle="collapse" data-parent="#clients" href="#client-{{$index}}" style="cursor: pointer">
                     <h3 class="panel-title">
                         <span class="fa fa-folder hidden-xs"></span>{{client.name}}
@@ -79,7 +81,7 @@
                         </table>
                     </div>
                     <div class="panel-footer">
-                         <span class="pull-right">
+                        <span class="pull-right">
                             <button type="button" class="btn btn-sm btn-default" ng-click="editClient(client)">
                                 <span class="fa fa-pencil"></span>&nbsp;<span translate>Edit</span>
                             </button>
