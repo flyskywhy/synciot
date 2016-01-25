@@ -20,15 +20,17 @@ type apiSvc struct {
 	assetDir  string
 	cmdServer map[string]*CmdServer
 	cfgPath   string
+	eventSub        *BufferedSubscription
 	listener  net.Listener
 	stop      chan struct{}
 }
 
-func newAPISvc(assets, config, address string) (*apiSvc, error) {
+func newAPISvc(assets, config, address string, eventSub *BufferedSubscription) (*apiSvc, error) {
 	svc := &apiSvc{
 		assetDir:  assets,
 		cmdServer: make(map[string]*CmdServer),
 		cfgPath:   config,
+		eventSub:  eventSub,
 	}
 
 	var err error
@@ -41,6 +43,7 @@ func (s *apiSvc) Serve() {
 
 	// The GET handlers
 	getRestMux := http.NewServeMux()
+	getRestMux.HandleFunc("/rest/events", s.getEvents)
 	getRestMux.HandleFunc("/rest/stats/folder", s.getFolderStats)
 	getRestMux.HandleFunc("/rest/client/config", s.getClientConfig)
 	getRestMux.HandleFunc("/rest/client/status", s.getClientStatus)
@@ -128,6 +131,14 @@ func getSyncthingMyId(xmlPath string) string {
 		return myID
 	}
 
+	//	b, err := ioutil.ReadAll(resp.Body)
+	//	if err != nil {
+	//		fmt.Println("http.Do failed,[err=%s][url=%s]", err, url)
+	//		return myID
+	//	}
+	//	json.Unmarshal(b, &cfg_json)
+	//	//	cfg_byte, _ := json.Marshal(cfg_json)
+
 	myID = cfg.MyID
 
 	return myID
@@ -168,6 +179,11 @@ func getSyncthingRemoteDevices(xmlPath string) []ClientConfiguration {
 
 	return clients
 }
+
+//func getSyncthingDeviceIdShort(id string) string {
+//	reg := regexp.MustCompile("-.*")
+//	return reg.ReplaceAllString(id, "")
+//}
 
 func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
@@ -339,6 +355,15 @@ func setSyncthingProtocolPort(xmlPath string, port string) {
 	ioutil.WriteFile(xmlPath, buf, 0644)
 }
 
+//	fd, err := os.OpenFile(xmlPath, os.O_RDWR, 0644)
+//	defer fd.Close()
+//
+//	_, err = fd.WriteString(newcontent)
+//	if err != nil {
+//		fmt.Println(err)
+//		return
+//	}
+
 func setSyncthingFolderConnector(synciotDir string) {
 	xmlDir := filepath.FromSlash(synciotDir + "/" + SYNCTHING_CONFIG_DIR)
 	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
@@ -442,6 +467,11 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	setSyncthingMisc(xmlPath)
 
 	genUserHtml(qs.Get("id"))
+
+	//	deviceId := getSyncthingDeviceId(xmlPath)
+	//	deviceIdShort := getSyncthingDeviceIdShort(deviceId)
+	//	os.MkdirAll(filepath.FromSlash(path + "/sync-" + deviceIdShort), 0775)
+	//	os.MkdirAll(filepath.FromSlash(path + "/sync-" + deviceIdShort + "-temp"), 0775)
 }
 
 func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
@@ -503,6 +533,30 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(res)
+}
+
+func (s *apiSvc) getEvents(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	sinceStr := qs.Get("since")
+	limitStr := qs.Get("limit")
+	since, _ := strconv.Atoi(sinceStr)
+	limit, _ := strconv.Atoi(limitStr)
+
+	s.fss.gotEventRequest()
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	// Flush before blocking, to indicate that we've received the request
+	// and that it should not be retried.
+	f := w.(http.Flusher)
+	f.Flush()
+
+	evs := s.eventSub.Since(since, nil)
+	if 0 < limit && limit < len(evs) {
+		evs = evs[len(evs)-limit:]
+	}
+
+	json.NewEncoder(w).Encode(evs)
 }
 
 type embeddedStatic struct {

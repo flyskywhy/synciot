@@ -69,17 +69,20 @@ func main() {
 }
 
 func synciotMain() {
-	setupGUI()
+	// Event subscription for the API; must start early to catch the early events.
+	apiSub := NewBufferedSubscription(Default.Subscribe(AllEvents), 1000)
+
+	setupGUI(apiSub)
 
 	<-quitChan
 	mainSvc.Stop()
 }
 
-func setupGUI() {
+func setupGUI(apiSub *BufferedSubscription) {
 	assets := filepath.Join(binDir, guiAssets)
 	config := filepath.Join(binDir, CONFIG_JSON)
 
-	api, err := newAPISvc(assets, config, guiAddress)
+	api, err := newAPISvc(assets, config, guiAddress, apiSub)
 	if err != nil {
 		fmt.Println("Cannot start GUI:", err)
 	} else {

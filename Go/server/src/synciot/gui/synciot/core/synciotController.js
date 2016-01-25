@@ -20,6 +20,8 @@ angular.module('synciot.core')
         $scope.model = {};
         $scope.pageName = "Administrator";
         $scope.folders = {};
+//        $scope.syncthingGuiPorts = {};
+//        $scope.syncthingProtocolPorts = {};
 
         $scope.emitHTTPError = function (data, status, headers, config) {
             $scope.$emit('HTTPError', {data: data, status: status, headers: headers, config: config});
@@ -183,6 +185,14 @@ angular.module('synciot.core')
         $scope.about = function () {
             $('#about').modal('show');
         };
+
+//            for (var id in $scope.folders) {
+//                $scope.folders[id].devices = $scope.folders[id].devices.filter(function (n) {
+//                    return n.deviceID !== $scope.currentDevice.deviceID;
+//                });
+//            }
+
+
 
         $scope.stopSyncthing = function (folderCfg) {
             $http.post(urlbase + "/system/stop?folder=" + encodeURIComponent(folderCfg.id)).success(function () {

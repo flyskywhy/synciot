@@ -5,6 +5,7 @@
 /*global $: false, angular: false, console: false, validLangs: false */
 
 var synciot = angular.module('synciot', [
+//    'angularUtils.directives.dirPagination',
     'pascalprecht.translate',
 
     'synciot.core',
