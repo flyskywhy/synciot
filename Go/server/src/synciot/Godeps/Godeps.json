@@ -3,6 +3,10 @@
 	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
+			"ImportPath": "github.com/evalgo/evos",
+			"Rev": "c603440d6b803541f35c1d8c58a62fa9f37c6b55"
+		},
+		{
 			"ImportPath": "github.com/thejerf/suture",
 			"Comment": "v1.0.1",
 			"Rev": "99c1f2d613756768fc4299acd9dc621e11ed3fd7"
