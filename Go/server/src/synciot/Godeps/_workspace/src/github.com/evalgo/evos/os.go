@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	OsCopySrc = ""
 	OsCopyDst = ""
 )
 
@@ -61,19 +62,22 @@ func WalkCopyFunc(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
+
+	relPath, _ := filepath.Rel(OsCopySrc, path)
+
 	if !info.IsDir() {
 		if DEBUG {
-			log.Println("WalkCopyFunc copy file from", path, "to", OsCopyDst+string(os.PathSeparator)+path)
+			log.Println("WalkCopyFunc copy file from", path, "to", OsCopyDst+string(os.PathSeparator)+relPath)
 		}
-		_, err = CopyFile(path, OsCopyDst+string(os.PathSeparator)+path)
+		_, err = CopyFile(path, OsCopyDst+string(os.PathSeparator)+relPath)
 		if err != nil {
 			return err
 		}
 	} else {
 		if DEBUG {
-			log.Println("WalkCopyFunc create folder", OsCopyDst+string(os.PathSeparator)+path)
+			log.Println("WalkCopyFunc create folder", OsCopyDst+string(os.PathSeparator)+relPath)
 		}
-		err = os.MkdirAll(OsCopyDst+string(os.PathSeparator)+path, 0777)
+		err = os.MkdirAll(OsCopyDst+string(os.PathSeparator)+relPath, 0777)
 		if err != nil {
 			return err
 		}
@@ -83,6 +87,7 @@ func WalkCopyFunc(path string, info os.FileInfo, err error) error {
 
 // copies a folder from source to destination
 func CopyFolder(src, dst string) error {
+	OsCopySrc = src
 	OsCopyDst = dst
 	err := filepath.Walk(src, WalkCopyFunc)
 	if err != nil {
