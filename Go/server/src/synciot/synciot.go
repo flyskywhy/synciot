@@ -21,6 +21,9 @@ const (
 	CONFIG_JSON = "synciot.json"
 
 	SYNCTHING_CONFIG_DIR = "config"
+	IO_DIR               = "io"
+	IN_DIR               = "in"
+	SYNC_DIR             = "sync"
 )
 
 type FolderConfiguration struct {

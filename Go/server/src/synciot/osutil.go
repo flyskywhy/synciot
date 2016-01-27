@@ -114,3 +114,24 @@ func copyFileContents(src, dst string) (err error) {
 	err = out.Sync()
 	return
 }
+
+// CountFiles count how many files in path and its subfolder.
+func CountFiles(path string) int {
+	fullPath, _ := filepath.Abs(path)
+	c := 0
+
+	filepath.Walk(fullPath, func(path string, fi os.FileInfo, err error) error {
+		if nil == fi {
+			return err
+		}
+		if fi.IsDir() {
+			return nil
+		}
+
+		c++
+
+		return nil
+	})
+
+	return c
+}

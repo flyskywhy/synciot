@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/evalgo/evos"
 )
 
 type apiSvc struct {
@@ -53,6 +55,7 @@ func (s *apiSvc) Serve() {
 	postRestMux.HandleFunc("/rest/system/generate", s.postGenFolder)
 	postRestMux.HandleFunc("/rest/system/start", s.postStartFolder)
 	postRestMux.HandleFunc("/rest/system/stop", s.postStopFolder)
+	postRestMux.HandleFunc("/rest/client/start", s.postStartClient)
 
 	// A handler that splits requests between the two above and disables
 	// caching
@@ -167,6 +170,11 @@ func getSyncthingRemoteDevices(xmlPath string) []ClientConfiguration {
 	}
 
 	return clients
+}
+
+func getSyncthingDeviceIdShort(id string) string {
+	reg := regexp.MustCompile("-.*")
+	return reg.ReplaceAllString(id, "")
 }
 
 func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
@@ -503,6 +511,33 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(res)
+}
+
+func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	serverId := qs.Get("serverId")
+
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == serverId {
+				inDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + IN_DIR)
+				xmlPath := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
+				os.MkdirAll(inDir, 0775)
+				fc := CountFiles(inDir)
+
+				os.Create(filepath.FromSlash(inDir + "/start." + strconv.Itoa(fc) + ".synciot"))
+
+				for _, client := range getSyncthingRemoteDevices(xmlPath) {
+					syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
+					evos.CopyFolder(inDir, syncInDir)
+				}
+
+				os.RemoveAll(inDir)
+				os.MkdirAll(inDir, 0775)
+			}
+		}
+	}
 }
 
 type embeddedStatic struct {

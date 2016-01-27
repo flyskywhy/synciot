@@ -101,6 +101,11 @@ angular.module('user.core')
         };
 
         $scope.startClient = function (clients) {
+            if ($scope.checkboxMasterLogical == true) {
+                $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                }).error($scope.emitHTTPError);
+            } else {
+            }
         };
 
         $scope.checkboxAll = function () {
