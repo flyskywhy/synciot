@@ -207,7 +207,37 @@ func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *apiSvc) getClientStatus(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	serverId := qs.Get("serverId")
+	clientId := qs.Get("clientId")
+	res := s.clientSummary(serverId, clientId)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(res)
 
+}
+
+func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{} {
+	var res = make(map[string]interface{})
+
+	s.fillCfgFromFile()
+	if s.cfg != nil && s.cfg.Folders != nil {
+		for _, rf := range s.cfg.Folders {
+			if rf.ID == serverId {
+				syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+
+				_, err := os.Stat(syncInDir)
+				if err == nil {
+					res["state"] = "running"
+				} else {
+					res["state"] = "stopped"
+				}
+
+				return res
+			}
+		}
+	}
+
+	return res
 }
 
 func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {

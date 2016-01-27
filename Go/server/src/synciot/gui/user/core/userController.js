@@ -33,7 +33,8 @@ angular.module('user.core')
             var key = "refreshClient" + client;
             if (!debouncedFuncs[key]) {
                 debouncedFuncs[key] = debounce(function () {
-                    $http.get(urlbase + '/client/status?client=' + encodeURIComponent(client)).success(function (data) {
+                    $http.get(urlbase + '/client/status?serverId=' + encodeURIComponent($scope.thisServerId())
+                                                    + ';clientId=' + encodeURIComponent(client)).success(function (data) {
                         $scope.model[client] = data;
                         console.log("refreshClient", client, data);
                     }).error($scope.emitHTTPError);
@@ -78,6 +79,49 @@ angular.module('user.core')
 
         $scope.refresh = function () {
             refreshSystem();
+
+            Object.keys($scope.clients).forEach(function (client) {
+                refreshClient(client);
+            });
+        };
+
+        $scope.clientStatus = function (client) {
+            var state = 'unknown'
+
+            if (typeof $scope.model[client.id] === 'undefined') {
+                return 'unknown';
+            }
+
+            if (!$scope.model[client.id].state) {
+                return 'unknown';
+            }
+
+            state = '' + $scope.model[client.id].state;
+            return state;
+        };
+
+        $scope.clientsStatus = function () {
+            var state = 'unknown'
+
+            for (var i in $scope.clientList) {
+                var client = $scope.clientList[i];
+                if (client.checkboxSlaveLogical == true) {
+                    if (typeof $scope.model[client.id] === 'undefined') {
+                        return 'unknown';
+                    }
+
+                    if (!$scope.model[client.id].state) {
+                        return 'unknown';
+                    }
+
+                    state = '' + $scope.model[client.id].state;
+                    if (state === 'running') {
+                        return 'running'
+                    }
+                }
+            }
+
+            return state;
         };
 
         $scope.administratorGuiAddress = function () {

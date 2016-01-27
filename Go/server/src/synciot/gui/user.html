@@ -49,10 +49,10 @@
             <input type="checkbox" ng-model="checkboxMasterDisplay" ng-click="checkboxAll()"><span translate>Select all</span>
             <div class="panel-heading" data-toggle="collapse" href="#client-this" style="cursor: pointer">
                 <span class="pull-left">
-                    <button type="button" class="btn btn-sm btn-default" ng-click="stopClient(clients)">
+                    <button type="button" class="btn btn-sm btn-default" ng-click="stopClient(clients)" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
                         <span class="fa fa-stop"></span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-default" ng-click="startClient(clients)">
+                    <button type="button" class="btn btn-sm btn-default" ng-click="startClient(clients)" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
                         <span class="fa fa-play"></span>
                     </button>
                     <span class="fa fa-bell-o"></span><span translate>Any files need to be processed by client shoud be put into ${Synciot}/io/in/ folder before press this</span>&nbsp;<span class="fa fa-play"></span><span translate>button</span>
@@ -68,6 +68,9 @@
                 <div class="panel-heading" data-toggle="collapse" data-parent="#clients" href="#client-{{$index}}" style="cursor: pointer">
                     <h3 class="panel-title">
                         <span class="fa fa-folder hidden-xs"></span>{{client.name}}
+                        <span class="pull-right text-primary" ng-switch="clientStatus(client)">
+                            <span ng-switch-when="running"><span class="hidden-xs" translate>Syncing</span><span class="visible-xs">&#9724;</span></span>
+                        </span>
                     </h3>
                 </div>
                 <div id="client-{{$index}}" class="panel-collapse collapse">
