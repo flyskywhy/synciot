@@ -147,9 +147,9 @@ angular.module('user.core')
             $('#about').modal('show');
         };
 
-        $scope.stopClient = function () {
+        function startStopClient(startStop) {
             if ($scope.checkboxMasterLogical == true) {
-                $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
                     $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             } else {
@@ -167,36 +167,18 @@ angular.module('user.core')
                         'Content-Type': 'application/json'
                     }
                 };
-                $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
+                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
                     $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             }
+        }
+
+        $scope.stopClient = function () {
+            startStopClient('stop')
         };
 
         $scope.startClient = function () {
-            if ($scope.checkboxMasterLogical == true) {
-                $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
-                    $scope.startStopWaitNextRefreshClient = true;
-                }).error($scope.emitHTTPError);
-            } else {
-                var clientIds = [];
-
-                for (var i in $scope.clientList) {
-                    var client = $scope.clientList[i];
-                    if (client.checkboxSlaveLogical == true) {
-                        clientIds.push(client.id);
-                    }
-                }
-
-                var opts = {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                };
-                $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
-                    $scope.startStopWaitNextRefreshClient = true;
-                }).error($scope.emitHTTPError);
-            }
+            startStopClient('start')
         };
 
         $scope.checkboxAll = function () {

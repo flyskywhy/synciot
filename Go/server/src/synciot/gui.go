@@ -544,12 +544,7 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
-	qs := r.URL.Query()
-	serverId := qs.Get("serverId")
-	result, _ := ioutil.ReadAll(r.Body)
-	r.Body.Close()
-
+func (s *apiSvc) startStopClient(startStop, serverId string, result []byte) {
 	s.fillCfgFromFile()
 	if s.cfg != nil && s.cfg.Folders != nil {
 		for _, rf := range s.cfg.Folders {
@@ -557,9 +552,13 @@ func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 				inDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + IN_DIR)
 				xmlPath := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
 				os.MkdirAll(inDir, 0775)
-				fc := CountFiles(inDir)
 
-				os.Create(filepath.FromSlash(inDir + "/start." + strconv.Itoa(fc) + ".synciot"))
+				if startStop == "start" {
+					fc := CountFiles(inDir)
+					os.Create(filepath.FromSlash(inDir + "/start." + strconv.Itoa(fc) + ".synciot"))
+				} else {
+					os.Create(filepath.FromSlash(inDir + "/stop.synciot"))
+				}
 
 				if len(result) == 0 {
 					for _, client := range getSyncthingRemoteDevices(xmlPath) {
@@ -582,41 +581,22 @@ func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
+	qs := r.URL.Query()
+	serverId := qs.Get("serverId")
+	result, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+
+	s.startStopClient("start", serverId, result)
+}
+
 func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	serverId := qs.Get("serverId")
 	result, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
-	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
-			if rf.ID == serverId {
-				inDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + IN_DIR)
-				xmlPath := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
-				os.MkdirAll(inDir, 0775)
-
-				os.Create(filepath.FromSlash(inDir + "/stop.synciot"))
-
-				if len(result) == 0 {
-					for _, client := range getSyncthingRemoteDevices(xmlPath) {
-						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
-						evos.CopyFolder(inDir, syncInDir)
-					}
-				} else {
-					var clientIds []string
-					json.Unmarshal(result, &clientIds)
-					for _, clientId := range clientIds {
-						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
-						evos.CopyFolder(inDir, syncInDir)
-					}
-				}
-
-				os.RemoveAll(inDir)
-				os.MkdirAll(inDir, 0775)
-			}
-		}
-	}
+	s.startStopClient("stop", serverId, result)
 }
 
 type embeddedStatic struct {
