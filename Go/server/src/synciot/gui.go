@@ -547,6 +547,8 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	serverId := qs.Get("serverId")
+	result, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
 
 	s.fillCfgFromFile()
 	if s.cfg != nil && s.cfg.Folders != nil {
@@ -559,9 +561,18 @@ func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 
 				os.Create(filepath.FromSlash(inDir + "/start." + strconv.Itoa(fc) + ".synciot"))
 
-				for _, client := range getSyncthingRemoteDevices(xmlPath) {
-					syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
-					evos.CopyFolder(inDir, syncInDir)
+				if len(result) == 0 {
+					for _, client := range getSyncthingRemoteDevices(xmlPath) {
+						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
+						evos.CopyFolder(inDir, syncInDir)
+					}
+				} else {
+					var clientIds []string
+					json.Unmarshal(result, &clientIds)
+					for _, clientId := range clientIds {
+						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+						evos.CopyFolder(inDir, syncInDir)
+					}
 				}
 
 				os.RemoveAll(inDir)
@@ -574,6 +585,8 @@ func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	serverId := qs.Get("serverId")
+	result, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
 
 	s.fillCfgFromFile()
 	if s.cfg != nil && s.cfg.Folders != nil {
@@ -585,9 +598,18 @@ func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
 
 				os.Create(filepath.FromSlash(inDir + "/stop.synciot"))
 
-				for _, client := range getSyncthingRemoteDevices(xmlPath) {
-					syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
-					evos.CopyFolder(inDir, syncInDir)
+				if len(result) == 0 {
+					for _, client := range getSyncthingRemoteDevices(xmlPath) {
+						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
+						evos.CopyFolder(inDir, syncInDir)
+					}
+				} else {
+					var clientIds []string
+					json.Unmarshal(result, &clientIds)
+					for _, clientId := range clientIds {
+						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+						evos.CopyFolder(inDir, syncInDir)
+					}
 				}
 
 				os.RemoveAll(inDir)

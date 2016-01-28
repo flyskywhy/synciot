@@ -49,10 +49,10 @@
             <input type="checkbox" ng-model="checkboxMasterDisplay" ng-click="checkboxAll()"><span translate>Select all</span>
             <div class="panel-heading" data-toggle="collapse" href="#client-this" style="cursor: pointer">
                 <span class="pull-left">
-                    <button type="button" class="btn btn-sm btn-default" ng-click="stopClient(clients)" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
+                    <button type="button" class="btn btn-sm btn-default" ng-click="stopClient()" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
                         <span class="fa fa-stop"></span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-default" ng-click="startClient(clients)" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
+                    <button type="button" class="btn btn-sm btn-default" ng-click="startClient()" ng-disabled="['running', 'unknown'].indexOf(clientsStatus()) > -1">
                         <span class="fa fa-play"></span>
                     </button>
                     <span class="fa fa-bell-o"></span><span translate>Any files need to be processed by client shoud be put into ${Synciot}/io/in/ folder before press this</span>&nbsp;<span class="fa fa-play"></span><span translate>button</span>
