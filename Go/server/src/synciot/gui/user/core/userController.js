@@ -142,6 +142,11 @@ angular.module('user.core')
         };
 
         $scope.stopClient = function (clients) {
+            if ($scope.checkboxMasterLogical == true) {
+                $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                }).error($scope.emitHTTPError);
+            } else {
+            }
         };
 
         $scope.startClient = function (clients) {
