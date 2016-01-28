@@ -22,6 +22,7 @@ angular.module('user.core')
         $scope.clientList = [];
         $scope.checkboxMasterDisplay = true;
         $scope.checkboxMasterLogical = true;
+        $scope.startStopWaitNextRefreshClient = false;
 
         $scope.emitHTTPError = function (data, status, headers, config) {
             $scope.$emit('HTTPError', {data: data, status: status, headers: headers, config: config});
@@ -36,6 +37,7 @@ angular.module('user.core')
                     $http.get(urlbase + '/client/status?serverId=' + encodeURIComponent($scope.thisServerId())
                                                     + ';clientId=' + encodeURIComponent(client)).success(function (data) {
                         $scope.model[client] = data;
+                        $scope.startStopWaitNextRefreshClient = false;
                         console.log("refreshClient", client, data);
                     }).error($scope.emitHTTPError);
                 }, 1000, true);
@@ -114,6 +116,10 @@ angular.module('user.core')
                         return 'unknown';
                     }
 
+                    if ($scope.startStopWaitNextRefreshClient) {
+                        return 'unknown';
+                    }
+
                     state = '' + $scope.model[client.id].state;
                     if (state === 'running') {
                         return 'running'
@@ -144,6 +150,7 @@ angular.module('user.core')
         $scope.stopClient = function () {
             if ($scope.checkboxMasterLogical == true) {
                 $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                    $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             } else {
                 var clientIds = [];
@@ -161,6 +168,7 @@ angular.module('user.core')
                     }
                 };
                 $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
+                    $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             }
         };
@@ -168,6 +176,7 @@ angular.module('user.core')
         $scope.startClient = function () {
             if ($scope.checkboxMasterLogical == true) {
                 $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                    $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             } else {
                 var clientIds = [];
@@ -185,6 +194,7 @@ angular.module('user.core')
                     }
                 };
                 $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
+                    $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             }
         };
