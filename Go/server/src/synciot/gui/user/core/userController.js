@@ -38,6 +38,19 @@ angular.module('user.core')
                                                     + ';clientId=' + encodeURIComponent(client)).success(function (data) {
                         $scope.model[client] = data;
                         $scope.startStopWaitNextRefreshClient = false;
+
+                        var out = $scope.model[client].out
+                        if ($scope.clients[client].outOld == -1) {
+                            $scope.clients[client].outOld = out
+                            $scope.clients[client].outInc = 0
+                        } else {
+                            if ($scope.clients[client].outOld < out) {
+                                $scope.clients[client].outInc = out - $scope.clients[client].outOld
+                            } else {
+                                $scope.clients[client].outOld = out
+                                $scope.clients[client].outInc = 0
+                            }
+                        }
                         console.log("refreshClient", client, data);
                     }).error($scope.emitHTTPError);
                 }, 1000, true);
@@ -54,6 +67,7 @@ angular.module('user.core')
             $scope.clientList.forEach(function (client) {
                 client.checkboxSlaveDisplay = true;
                 client.checkboxSlaveLogical = true;
+                client.outOld = -1;
             });
             Object.keys($scope.clients).forEach(function (client) {
                 refreshClient(client);
@@ -99,6 +113,13 @@ angular.module('user.core')
             }
 
             state = '' + $scope.model[client.id].state;
+
+            if (state != 'running') {
+                if (client.outInc != 0) {
+                    return 'synced'
+                }
+            }
+
             return state;
         };
 

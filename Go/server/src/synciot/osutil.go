@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -132,6 +133,23 @@ func CountFiles(path string) int {
 
 		return nil
 	})
+
+	return c
+}
+
+// CountFiles count how many folders in path (not in its subfolder).
+func CountDirs(path string) int {
+	fullPath, _ := filepath.Abs(path)
+	c := 0
+
+	dir, err := ioutil.ReadDir(fullPath)
+	if err == nil {
+		for _, fi := range dir {
+			if fi.IsDir() {
+				c++
+			}
+		}
+	}
 
 	return c
 }

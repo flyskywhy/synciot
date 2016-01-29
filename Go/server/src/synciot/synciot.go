@@ -23,6 +23,7 @@ const (
 	SYNCTHING_CONFIG_DIR = "config"
 	IO_DIR               = "io"
 	IN_DIR               = "in"
+	OUT_DIR              = "out"
 	SYNC_DIR             = "sync"
 )
 

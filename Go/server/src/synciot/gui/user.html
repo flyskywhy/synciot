@@ -70,6 +70,7 @@
                         <span class="fa fa-folder hidden-xs"></span>{{client.name}}
                         <span class="pull-right text-primary" ng-switch="clientStatus(client)">
                             <span ng-switch-when="running"><span class="hidden-xs" translate>Syncing</span><span class="visible-xs">&#9724;</span></span>
+                            <span ng-switch-when="synced">{{client.outInc}}<span class="visible-xs">&#9724;</span></span>
                         </span>
                     </h3>
                 </div>
