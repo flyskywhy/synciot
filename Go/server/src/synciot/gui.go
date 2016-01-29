@@ -231,10 +231,10 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 					res["state"] = "syncing"
 				} else {
 					res["state"] = "idle"
-
-					outDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
-					res["out"] = CountDirs(outDir)
 				}
+
+				outDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
+				res["out"] = CountDirs(outDir)
 
 				return res
 			}
