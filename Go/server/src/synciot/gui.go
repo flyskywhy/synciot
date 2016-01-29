@@ -228,9 +228,9 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 
 				_, err := os.Stat(syncInDir)
 				if err == nil {
-					res["state"] = "running"
+					res["state"] = "syncing"
 				} else {
-					res["state"] = "stopped"
+					res["state"] = "idle"
 
 					outDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
 					res["out"] = CountDirs(outDir)

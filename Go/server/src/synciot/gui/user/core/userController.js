@@ -114,7 +114,7 @@ angular.module('user.core')
 
             state = '' + $scope.model[client.id].state;
 
-            if (state != 'running') {
+            if (state != 'syncing') {
                 if (client.outInc != 0) {
                     return 'synced'
                 }
@@ -142,8 +142,8 @@ angular.module('user.core')
                     }
 
                     state = '' + $scope.model[client.id].state;
-                    if (state === 'running') {
-                        return 'running'
+                    if (state === 'syncing') {
+                        return 'syncing'
                     }
                 }
             }
