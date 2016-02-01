@@ -137,7 +137,7 @@ func CountFiles(path string) int {
 	return c
 }
 
-// CountFiles count how many folders in path (not in its subfolder).
+// CountDirs count how many folders in path (not in its subfolder).
 func CountDirs(path string) int {
 	fullPath, _ := filepath.Abs(path)
 	c := 0
