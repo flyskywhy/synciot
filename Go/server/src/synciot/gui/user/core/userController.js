@@ -78,14 +78,6 @@ angular.module('user.core')
             }
         }
 
-        function refreshSystem() {
-            $http.get(urlbase + '/system/status').success(function (data) {
-                $scope.system = data;
-
-                console.log("refreshSystem", data);
-            }).error($scope.emitHTTPError);
-        }
-
         function refreshConfig() {
             $http.get(urlbase + '/client/config?server=' + encodeURIComponent($scope.thisServerId())).success(function (data) {
                 updateLocalConfig(data);
@@ -94,8 +86,6 @@ angular.module('user.core')
         }
 
         $scope.refresh = function () {
-            refreshSystem();
-
             Object.keys($scope.clients).forEach(function (client) {
                 refreshClient(client);
             });
