@@ -43,18 +43,18 @@ func (s *apiSvc) Serve() {
 
 	// The GET handlers
 	getRestMux := http.NewServeMux()
-	getRestMux.HandleFunc("/rest/stats/folder", s.getFolderStats)
+	getRestMux.HandleFunc("/rest/server/config", s.getServerConfig)
+	getRestMux.HandleFunc("/rest/server/status", s.getServerStatus)
 	getRestMux.HandleFunc("/rest/client/config", s.getClientConfig)
 	getRestMux.HandleFunc("/rest/client/status", s.getClientStatus)
-	getRestMux.HandleFunc("/rest/system/config", s.getSystemConfig)
 	getRestMux.HandleFunc("/rest/system/status", s.getSystemStatus)
 
 	// The POST handlers
 	postRestMux := http.NewServeMux()
-	postRestMux.HandleFunc("/rest/system/config", s.postSystemConfig)
-	postRestMux.HandleFunc("/rest/system/generate", s.postGenFolder)
-	postRestMux.HandleFunc("/rest/system/start", s.postStartFolder)
-	postRestMux.HandleFunc("/rest/system/stop", s.postStopFolder)
+	postRestMux.HandleFunc("/rest/server/config", s.postServerConfig)
+	postRestMux.HandleFunc("/rest/server/generate", s.postGenServer)
+	postRestMux.HandleFunc("/rest/server/start", s.postStartServer)
+	postRestMux.HandleFunc("/rest/server/stop", s.postStopServer)
 	postRestMux.HandleFunc("/rest/client/start", s.postStartClient)
 	postRestMux.HandleFunc("/rest/client/stop", s.postStopClient)
 
@@ -183,10 +183,10 @@ func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 	server := qs.Get("server")
 
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
 			if rf.ID == server {
-				xmlDir := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR)
+				xmlDir := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR)
 				xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
 				_, err := os.Stat(xmlPath)
 				if err == nil {
@@ -221,10 +221,10 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 	var res = make(map[string]interface{})
 
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
 			if rf.ID == serverId {
-				syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+				syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
 
 				_, err := os.Stat(syncInDir)
 				if err == nil {
@@ -233,7 +233,7 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 					res["state"] = "idle"
 				}
 
-				outDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
+				outDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
 				res["out"] = CountDirs(outDir)
 
 				return res
@@ -244,7 +244,7 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 	return res
 }
 
-func (s *apiSvc) getSystemConfig(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) getServerConfig(w http.ResponseWriter, r *http.Request) {
 	cfg, err := ioutil.ReadFile(s.cfgPath)
 
 	if err != nil {
@@ -268,23 +268,23 @@ func (s *apiSvc) fillCfgFromFile() {
 	json.Unmarshal(cfg_byte, &s.cfg)
 }
 
-func (s *apiSvc) getFolderStats(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) getServerStatus(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
-	folder := qs.Get("folder")
-	res := s.folderSummary(folder)
+	server := qs.Get("server")
+	res := s.serverSummary(server)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
+func (s *apiSvc) serverSummary(server string) map[string]interface{} {
 	var res = make(map[string]interface{})
 	syncthingGuiPort := ""
 
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
-			if rf.ID == folder {
-				syncthingGuiPort = getSyncthingGuiPort(filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
+			if rf.ID == server {
+				syncthingGuiPort = getSyncthingGuiPort(filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
 				break
 			}
 		}
@@ -308,7 +308,7 @@ func (s *apiSvc) folderSummary(folder string) map[string]interface{} {
 	return res
 }
 
-func (s *apiSvc) postSystemConfig(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) postServerConfig(w http.ResponseWriter, r *http.Request) {
 	var cfg = make([]byte, r.ContentLength)
 	r.Body.Read(cfg)
 
@@ -416,12 +416,12 @@ func (s *apiSvc) fromAllConfigXml(get func(string) string) []string {
 
 	s.fillCfgFromFile()
 
-	if s.cfg == nil || s.cfg.Folders == nil {
+	if s.cfg == nil || s.cfg.Servers == nil {
 		return values
 	}
 
-	for _, rf := range s.cfg.Folders {
-		value = get(filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
+	for _, rf := range s.cfg.Servers {
+		value = get(filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR + "/config.xml"))
 		if value != "" {
 			values = append(values, value)
 		}
@@ -457,7 +457,7 @@ func genUserHtml(user string) {
 	Copy(filepath.FromSlash(binDir+"/gui/user.html"), userHtml)
 }
 
-func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) postGenServer(w http.ResponseWriter, r *http.Request) {
 	guiPorts := s.fromAllConfigXml(getSyncthingGuiPort)
 	guiPort := strconv.Itoa(getIncreasedPort(guiPorts, "127.0.0.1", "8384"))
 
@@ -486,15 +486,15 @@ func (s *apiSvc) postGenFolder(w http.ResponseWriter, r *http.Request) {
 	genUserHtml(qs.Get("id"))
 }
 
-func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) postStartServer(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
-	folder := qs.Get("folder")
+	server := qs.Get("server")
 
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
-			if rf.ID == folder {
-				xmlDir := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR)
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
+			if rf.ID == server {
+				xmlDir := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR)
 				xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
 				_, err := os.Stat(xmlPath)
 				if err == nil {
@@ -515,21 +515,21 @@ func (s *apiSvc) postStartFolder(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *apiSvc) postStopFolder(w http.ResponseWriter, r *http.Request) {
+func (s *apiSvc) postStopServer(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
-	folder := qs.Get("folder")
+	server := qs.Get("server")
 
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
-			if rf.ID == folder {
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
+			if rf.ID == server {
 				cmd := s.cmdServer[rf.ID]
 				if cmd != nil {
 					cmd.Stop()
 					return
 				} else {
-					fmt.Println("Warning: No cmdServer with folder", rf.ID)
-					http.Error(w, "Warning: No cmdServer with folder"+rf.ID, 500)
+					fmt.Println("Warning: No cmdServer with server", rf.ID)
+					http.Error(w, "Warning: No cmdServer with server"+rf.ID, 500)
 					return
 				}
 			}
@@ -549,11 +549,11 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 
 func (s *apiSvc) startStopClient(startStop, serverId string, result []byte) {
 	s.fillCfgFromFile()
-	if s.cfg != nil && s.cfg.Folders != nil {
-		for _, rf := range s.cfg.Folders {
+	if s.cfg != nil && s.cfg.Servers != nil {
+		for _, rf := range s.cfg.Servers {
 			if rf.ID == serverId {
-				inDir := filepath.FromSlash(rf.RawPath + "/" + IO_DIR + "/" + IN_DIR)
-				xmlPath := filepath.FromSlash(rf.RawPath + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
+				inDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/" + IN_DIR)
+				xmlPath := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
 				os.MkdirAll(inDir, 0775)
 
 				if startStop == "start" {
@@ -565,14 +565,14 @@ func (s *apiSvc) startStopClient(startStop, serverId string, result []byte) {
 
 				if len(result) == 0 {
 					for _, client := range getSyncthingRemoteDevices(xmlPath) {
-						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
+						syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
 						evos.CopyFolder(inDir, syncInDir)
 					}
 				} else {
 					var clientIds []string
 					json.Unmarshal(result, &clientIds)
 					for _, clientId := range clientIds {
-						syncInDir := filepath.FromSlash(rf.RawPath + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+						syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
 						evos.CopyFolder(inDir, syncInDir)
 					}
 				}

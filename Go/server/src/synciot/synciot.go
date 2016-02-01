@@ -27,13 +27,13 @@ const (
 	SYNC_DIR             = "sync"
 )
 
-type FolderConfiguration struct {
-	ID      string `json:"id"`
-	RawPath string `json:"path"`
+type ServerConfiguration struct {
+	ID   string `json:"id"`
+	Path string `json:"path"`
 }
 
 type Configuration struct {
-	Folders []FolderConfiguration `json:"folders"`
+	Servers []ServerConfiguration `json:"servers"`
 }
 
 var (

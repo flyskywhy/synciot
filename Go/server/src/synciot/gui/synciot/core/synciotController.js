@@ -31,7 +31,7 @@ angular.module('synciot.core')
             var key = "refreshFolder" + folder;
             if (!debouncedFuncs[key]) {
                 debouncedFuncs[key] = debounce(function () {
-                    $http.get(urlbase + '/stats/folder?folder=' + encodeURIComponent(folder)).success(function (data) {
+                    $http.get(urlbase + '/server/status?server=' + encodeURIComponent(folder)).success(function (data) {
                         $scope.model[folder] = data;
                         console.log("refreshFolder", folder, data);
                     }).error($scope.emitHTTPError);
@@ -44,7 +44,7 @@ angular.module('synciot.core')
             var hasConfig = !isEmptyObject($scope.config);
 
             $scope.config = config;
-            $scope.folders = folderMap($scope.config.folders);
+            $scope.folders = folderMap($scope.config.servers);
             Object.keys($scope.folders).forEach(function (folder) {
                 refreshFolder(folder);
             });
@@ -63,7 +63,7 @@ angular.module('synciot.core')
         }
 
         function refreshConfig() {
-            $http.get(urlbase + '/system/config').success(function (data) {
+            $http.get(urlbase + '/server/config').success(function (data) {
                 updateLocalConfig(data);
                 console.log("refreshConfig", data);
             }).error($scope.emitHTTPError);
@@ -118,7 +118,7 @@ angular.module('synciot.core')
                     'Content-Type': 'application/json'
                 }
             };
-            $http.post(urlbase + '/system/config', cfg, opts).success(function () {
+            $http.post(urlbase + '/server/config', cfg, opts).success(function () {
                 refreshConfig();
             }).error($scope.emitHTTPError);
         };
@@ -159,9 +159,9 @@ angular.module('synciot.core')
             folderCfg = $scope.currentFolder;
 
             $scope.folders[folderCfg.id] = folderCfg;
-            $scope.config.folders = folderList($scope.folders);
+            $scope.config.servers = folderList($scope.folders);
 
-            $http.post(urlbase + '/system/generate?path=' + encodeURIComponent(folderCfg.path)
+            $http.post(urlbase + '/server/generate?path=' + encodeURIComponent(folderCfg.path)
                                                  + ';id=' + encodeURIComponent(folderCfg.id)).success(function () {
                 $scope.saveConfig();
             }).error($scope.emitHTTPError);
@@ -175,7 +175,7 @@ angular.module('synciot.core')
             }
 
             delete $scope.folders[id];
-            $scope.config.folders = folderList($scope.folders);
+            $scope.config.servers = folderList($scope.folders);
 
             $scope.saveConfig();
         };
@@ -185,13 +185,13 @@ angular.module('synciot.core')
         };
 
         $scope.stopSyncthing = function (folderCfg) {
-            $http.post(urlbase + "/system/stop?folder=" + encodeURIComponent(folderCfg.id)).success(function () {
+            $http.post(urlbase + "/server/stop?server=" + encodeURIComponent(folderCfg.id)).success(function () {
                 $scope.model[folderCfg.id].state = 'stopped';
             }).error($scope.emitHTTPError);
         };
 
         $scope.startSyncthing = function (folderCfg) {
-            $http.post(urlbase + '/system/start?folder=' + encodeURIComponent(folderCfg.id)).success(function () {
+            $http.post(urlbase + '/server/start?server=' + encodeURIComponent(folderCfg.id)).success(function () {
                 $scope.model[folderCfg.id].state = 'running';
             }).error($scope.emitHTTPError);
         };
