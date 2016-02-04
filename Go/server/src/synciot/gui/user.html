@@ -27,12 +27,10 @@
         <span class="navbar-brand"><img class="logo" src="assets/img/logo-horizontal.svg" height="32" width="117"/></span>
         <p class="navbar-text hidden-xs" ng-class=>{{thisServerId()}}</p>
         <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="fa fa-cog"></span>&nbsp;<span translate>Actions</span> <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                    <li><a href="" ng-click="about()"><span class="fa fa-fw fa-heart-o"></span>&nbsp;<span translate>About</span></a></li>
-                </ul>
-            </li>
+            <select id="userIdNumSel" ng-change="userIdNumChange(userIdNum)" ng-model="userIdNum">
+                <option value="0">(0) flyskywhy</option>
+                <option value="7">(7) 李 政</option>
+            </select>
         </ul>
     </div>
 </nav>
@@ -112,8 +110,6 @@
     </div>
 </nav>
 
-<div about-modal></div>
-
 <!-- vendor scripts -->
 <script src="vendor/jquery/jquery-2.0.3.min.js"></script>
 <script src="vendor/angular/angular.min.js"></script>
@@ -125,8 +121,6 @@
 
 <!-- gui application code -->
 <script src="user/core/module.js"></script>
-<script src="user/core/aboutModalDirective.js"></script>
-<script src="user/core/modalDirective.js"></script>
 <script src="user/core/userController.js"></script>
 
 <script src="assets/lang/valid-langs.js"></script>

@@ -18,6 +18,7 @@ angular.module('user.core')
         $scope.config = {};
         $scope.model = {};
         $scope.pageName = "User";
+        $scope.userIdNum = "0";
         $scope.clients = {};
         $scope.clientList = [];
         $scope.checkboxMasterDisplay = true;
@@ -35,7 +36,8 @@ angular.module('user.core')
             if (!debouncedFuncs[key]) {
                 debouncedFuncs[key] = debounce(function () {
                     $http.get(urlbase + '/client/status?serverId=' + encodeURIComponent($scope.thisServerId())
-                                                    + ';clientId=' + encodeURIComponent(client)).success(function (data) {
+                                                    + ';clientId=' + encodeURIComponent(client)
+                                                    + ';userIdNum=' + encodeURIComponent($scope.userIdNum)).success(function (data) {
                         $scope.model[client] = data;
                         $scope.startStopWaitNextRefreshClient = false;
 
@@ -154,13 +156,16 @@ angular.module('user.core')
             return $scope.pageName;
         };
 
-        $scope.about = function () {
-            $('#about').modal('show');
-        };
+        $scope.userIdNumChange = function(num){
+            $scope.clientList.forEach(function (client) {
+                client.outOld = -1;
+            });
+        }
 
         function startStopClient(startStop) {
             if ($scope.checkboxMasterLogical == true) {
-                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId())
+                                                                                + ';userIdNum=' + encodeURIComponent($scope.userIdNum)).success(function () {
                     $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             } else {
@@ -178,7 +183,8 @@ angular.module('user.core')
                         'Content-Type': 'application/json'
                     }
                 };
-                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId()), angular.toJson(clientIds), opts).success(function () {
+                $http.post(urlbase + '/client/' + encodeURIComponent(startStop) + '?serverId=' + encodeURIComponent($scope.thisServerId())
+                                                                                + ';userIdNum=' + encodeURIComponent($scope.userIdNum), angular.toJson(clientIds), opts).success(function () {
                     $scope.startStopWaitNextRefreshClient = true;
                 }).error($scope.emitHTTPError);
             }

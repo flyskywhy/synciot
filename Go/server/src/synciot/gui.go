@@ -209,15 +209,13 @@ func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 
 func (s *apiSvc) getClientStatus(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
-	serverId := qs.Get("serverId")
-	clientId := qs.Get("clientId")
-	res := s.clientSummary(serverId, clientId)
+	res := s.clientSummary(qs.Get("serverId"), qs.Get("clientId"), qs.Get("userIdNum"))
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(res)
 
 }
 
-func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{} {
+func (s *apiSvc) clientSummary(serverId, clientId, userIdNum string) map[string]interface{} {
 	var res = make(map[string]interface{})
 
 	s.fillCfgFromFile()
@@ -233,7 +231,7 @@ func (s *apiSvc) clientSummary(serverId, clientId string) map[string]interface{}
 					res["state"] = "idle"
 				}
 
-				outDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
+				outDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
 				res["out"] = CountDirs(outDir)
 
 				return res
@@ -547,20 +545,20 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *apiSvc) startStopClient(startStop, serverId string, result []byte) {
+func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result []byte) {
 	s.fillCfgFromFile()
 	if s.cfg != nil && s.cfg.Servers != nil {
 		for _, rf := range s.cfg.Servers {
 			if rf.ID == serverId {
-				inDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/" + IN_DIR)
+				inDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + IN_DIR)
 				xmlPath := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
 				os.MkdirAll(inDir, 0775)
 
 				if startStop == "start" {
 					fc := CountFiles(inDir)
-					os.Create(filepath.FromSlash(inDir + "/start." + strconv.Itoa(fc) + ".synciot"))
+					os.Create(filepath.FromSlash(inDir + "/start" + userIdNum + "." + strconv.Itoa(fc) + ".synciot"))
 				} else {
-					os.Create(filepath.FromSlash(inDir + "/stop.synciot"))
+					os.Create(filepath.FromSlash(inDir + "/stop" + userIdNum + ".synciot"))
 				}
 
 				if len(result) == 0 {
@@ -587,19 +585,21 @@ func (s *apiSvc) startStopClient(startStop, serverId string, result []byte) {
 func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	serverId := qs.Get("serverId")
+	userIdNum := qs.Get("userIdNum")
 	result, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
-	s.startStopClient("start", serverId, result)
+	s.startStopClient("start", serverId, userIdNum, result)
 }
 
 func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	serverId := qs.Get("serverId")
+	userIdNum := qs.Get("userIdNum")
 	result, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
-	s.startStopClient("stop", serverId, result)
+	s.startStopClient("stop", serverId, userIdNum, result)
 }
 
 type embeddedStatic struct {

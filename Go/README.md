@@ -24,17 +24,25 @@ var urlbase = 'rest';
 #### GET /rest/client/status
 
     $http.get(urlbase + '/client/status?serverId=' + encodeURIComponent($scope.thisServerId())
-                                                           + ';clientId=' + encodeURIComponent(client)).success(function (data) {
+                                    + ';clientId=' + encodeURIComponent(client)
+                                    + ';userIdNum=' + encodeURIComponent($scope.userIdNum)).success(function (data) {
 
+这里输入的 userIdNum 参数是对应数字的字符串 string 变量。
 这里返回的 data 的数据结构是 UserConfiguration，其中的 id 和 name 对应的是 Syncthing 中的 Device 的 id 和 name
 
     res["state"] = 表明client的状态是"syncing"或"idle"
-    res["out"]  = 表明client回应的历史总次数，也就是保存在最终结果目录“${synciot}/io/out/${Client}-temp/”中的目录数。
+    res["out"]  = 整形 Int 变量。表明client回应的历史总次数，也就是保存在最终结果目录“${synciot}/io/out/${Client}-temp/”中的目录数。
 
 #### POST /rest/client/start
 
-    $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+    $http.post(urlbase + '/client/start?serverId=' + encodeURIComponent($scope.thisServerId())
+                                    + ';userIdNum=' + encodeURIComponent($scope.userIdNum)).success(function () {
+
+这里输入的 userIdNum 参数是对应数字的字符串 string 变量。
 
 #### POST /rest/client/stop
 
-    $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId())).success(function () {
+    $http.post(urlbase + '/client/stop?serverId=' + encodeURIComponent($scope.thisServerId())
+                                   + ';userIdNum=' + encodeURIComponent($scope.userIdNum)).success(function () {
+
+这里输入的 userIdNum 参数是对应数字的字符串 string 变量。
