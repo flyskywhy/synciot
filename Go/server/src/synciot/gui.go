@@ -15,12 +15,14 @@ import (
 	"time"
 
 	"github.com/evalgo/evos"
+	"github.com/thejerf/suture"
 )
 
 type apiSvc struct {
 	cfg       *Configuration
 	assetDir  string
 	cmdServer map[string]*CmdServer
+	outSvcId  map[string]suture.ServiceToken
 	cfgPath   string
 	listener  net.Listener
 	stop      chan struct{}
@@ -30,6 +32,7 @@ func newAPISvc(assets, config, address string) (*apiSvc, error) {
 	svc := &apiSvc{
 		assetDir:  assets,
 		cmdServer: make(map[string]*CmdServer),
+		outSvcId:  make(map[string]suture.ServiceToken),
 		cfgPath:   config,
 	}
 
@@ -502,6 +505,8 @@ func (s *apiSvc) postStartServer(w http.ResponseWriter, r *http.Request) {
 					s.cmdServer[rf.ID] = cmd
 					cmd.Serve()
 
+					s.outSvcId[rf.ID] = mainSvc.Add(newOutSvc(rf.Path))
+
 					return
 				} else {
 					fmt.Println(err)
@@ -524,6 +529,12 @@ func (s *apiSvc) postStopServer(w http.ResponseWriter, r *http.Request) {
 				cmd := s.cmdServer[rf.ID]
 				if cmd != nil {
 					cmd.Stop()
+
+					err := mainSvc.Remove(s.outSvcId[rf.ID])
+					if err != nil {
+						fmt.Println("Warning: Removing service somehow failed with server", rf.ID)
+					}
+
 					return
 				} else {
 					fmt.Println("Warning: No cmdServer with server", rf.ID)

@@ -129,7 +129,9 @@ func CountFiles(path string) int {
 			return nil
 		}
 
-		c++
+		if !strings.HasPrefix(strings.ToLower(fi.Name()), ".syncthing.") { // this synciot project hack ".syncthing." specially here
+			c++
+		}
 
 		return nil
 	})
