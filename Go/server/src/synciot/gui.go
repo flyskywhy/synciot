@@ -468,21 +468,26 @@ func (s *apiSvc) postGenServer(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	synciotDir := qs.Get("path")
 	xmlDir := filepath.FromSlash(synciotDir + "/" + SYNCTHING_CONFIG_DIR)
-	os.MkdirAll(xmlDir, 0775)
-
-	cmd := exec.Command(filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(out))
-
 	xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
-	setSyncthingGuiPort(xmlPath, guiPort)
-	setSyncthingProtocolPort(xmlPath, protocolPort)
-	os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
-	setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
-	setSyncthingMisc(xmlPath)
+	_, err := os.Stat(xmlPath)
+	if err != nil {
+		os.MkdirAll(xmlDir, 0775)
+
+		cmd := exec.Command(filepath.Join(binDir, "syncthing"), "-generate="+xmlDir)
+		out, err := cmd.Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(out))
+
+		setSyncthingGuiPort(xmlPath, guiPort)
+		setSyncthingProtocolPort(xmlPath, protocolPort)
+		os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
+		setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
+		setSyncthingMisc(xmlPath)
+	} else {
+		fmt.Println("Warning:", xmlPath, "aleady exist, if you want a new one, please remove config folder manually.")
+	}
 
 	genUserHtml(qs.Get("id"))
 }
