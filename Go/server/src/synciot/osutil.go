@@ -8,6 +8,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -154,4 +155,19 @@ func CountDirs(path string) int {
 	}
 
 	return c
+}
+
+// StringsInsert insert string after sep matched in origin
+func StringsInsert(origin, sep, insert string) string {
+	s := strings.SplitAfterN(origin, sep, 2)
+
+	// buffer.WriteString() is more efficient than `return s[0]+insert+s[1]`
+
+	var buffer bytes.Buffer
+
+	buffer.WriteString(s[0])
+	buffer.WriteString(insert)
+	buffer.WriteString(s[1])
+
+	return buffer.String()
 }

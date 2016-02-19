@@ -19,21 +19,23 @@ import (
 )
 
 type apiSvc struct {
-	cfg       *Configuration
-	assetDir  string
-	cmdServer map[string]*CmdServer
-	outSvcId  map[string]suture.ServiceToken
-	cfgPath   string
-	listener  net.Listener
-	stop      chan struct{}
+	cfg            *Configuration
+	assetDir       string
+	cmdServer      map[string]*CmdServer
+	outSvcId       map[string]suture.ServiceToken
+	connectorSvcId map[string]suture.ServiceToken
+	cfgPath        string
+	listener       net.Listener
+	stop           chan struct{}
 }
 
 func newAPISvc(assets, config, address string) (*apiSvc, error) {
 	svc := &apiSvc{
-		assetDir:  assets,
-		cmdServer: make(map[string]*CmdServer),
-		outSvcId:  make(map[string]suture.ServiceToken),
-		cfgPath:   config,
+		assetDir:       assets,
+		cmdServer:      make(map[string]*CmdServer),
+		outSvcId:       make(map[string]suture.ServiceToken),
+		connectorSvcId: make(map[string]suture.ServiceToken),
+		cfgPath:        config,
 	}
 
 	var err error
@@ -512,6 +514,8 @@ func (s *apiSvc) postStartServer(w http.ResponseWriter, r *http.Request) {
 
 					s.outSvcId[rf.ID] = mainSvc.Add(newOutSvc(rf.Path))
 
+					s.connectorSvcId[rf.ID] = mainSvc.Add(newConnectorSvc(rf.Path))
+
 					return
 				} else {
 					fmt.Println(err)
@@ -537,7 +541,12 @@ func (s *apiSvc) postStopServer(w http.ResponseWriter, r *http.Request) {
 
 					err := mainSvc.Remove(s.outSvcId[rf.ID])
 					if err != nil {
-						fmt.Println("Warning: Removing service somehow failed with server", rf.ID)
+						fmt.Println("Warning: Removing outSvc somehow failed with server", rf.ID)
+					}
+
+					err = mainSvc.Remove(s.connectorSvcId[rf.ID])
+					if err != nil {
+						fmt.Println("Warning: Removing connectorSvc somehow failed with server", rf.ID)
 					}
 
 					return

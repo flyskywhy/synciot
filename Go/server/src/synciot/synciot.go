@@ -25,6 +25,7 @@ const (
 	IN_DIR               = "in"
 	OUT_DIR              = "out"
 	SYNC_DIR             = "sync"
+	CONNECTOR_DIR        = "connector"
 )
 
 type ServerConfiguration struct {
@@ -40,6 +41,26 @@ var (
 	binDir   string
 	mainSvc  = suture.NewSimple("main")
 	quitChan chan os.Signal
+
+	CLIENT_EXTRA_FOLDER_DEVICE = []string{
+		"    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"false\">\n",
+		"        <device id=\"SERVER_DEVICE_ID\"></device>\n",
+		"        <device id=\"CLIENT_DEVICE_ID\"></device>\n",
+		"        <minDiskFreePct>1</minDiskFreePct>\n",
+		"        <versioning></versioning>\n",
+		"        <copiers>0</copiers>\n",
+		"        <pullers>0</pullers>\n",
+		"        <hashers>0</hashers>\n",
+		"        <order>random</order>\n",
+		"        <ignoreDelete>false</ignoreDelete>\n",
+		"    </folder>\n",
+	}
+
+	CLIENT_DEVICE = []string{
+		"    <device id=\"CLIENT_DEVICE_ID\" name=\"CLIENT_DEVICE_NAME\" compression=\"metadata\" introducer=\"false\">\n",
+		"        <address>dynamic</address>\n",
+		"    </device>\n",
+	}
 )
 
 // Command line and environment options
