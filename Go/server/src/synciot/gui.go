@@ -484,7 +484,9 @@ func (s *apiSvc) postGenServer(w http.ResponseWriter, r *http.Request) {
 
 		setSyncthingGuiPort(xmlPath, guiPort)
 		setSyncthingProtocolPort(xmlPath, protocolPort)
-		os.MkdirAll(filepath.FromSlash(synciotDir+"/connector"), 0775)
+		os.MkdirAll(filepath.FromSlash(synciotDir+"/"+IO_DIR+"/user0/in"), 0775)
+		os.MkdirAll(filepath.FromSlash(synciotDir+"/"+SYNC_DIR), 0775)
+		os.MkdirAll(filepath.FromSlash(synciotDir+"/"+CONNECTOR_DIR), 0775)
 		setSyncthingFolderConnector(filepath.FromSlash(synciotDir))
 		setSyncthingMisc(xmlPath)
 	} else {
