@@ -105,8 +105,8 @@ public class Synciot {
                             + SYNCTHING_CONFIG_PATH + "/");
                 }
             });
+            syncthingThread.start();
         }
-        syncthingThread.start();
     }
 
     private static void sedSync2ConfigXml() {
