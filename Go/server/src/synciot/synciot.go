@@ -42,7 +42,7 @@ var (
 	mainSvc  = suture.NewSimple("main")
 	quitChan chan os.Signal
 
-	CLIENT_EXTRA_FOLDER_DEVICE = []string{
+	CLIENT_FOLDER_DEVICE = []string{
 		"    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"false\">\n",
 		"        <device id=\"SERVER_DEVICE_ID\"></device>\n",
 		"        <device id=\"CLIENT_DEVICE_ID\"></device>\n",

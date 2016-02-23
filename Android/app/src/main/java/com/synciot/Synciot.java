@@ -22,9 +22,12 @@ public class Synciot {
     private static Context CallerCtx;
 
     private static String dataPath;
-    private static final String SYNC_PATH = "/sdcard/synciot/sync";
-    private static final String SYNC_TEMP_PATH = "/sdcard/synciot/sync-temp";
-    private static final String SYNCTHING_CONFIG_PATH = "/sdcard/synciot/config";
+    private static final String STORAGE_PATH = "/sdcard";
+    private static final String CLIENT_DIR = "synciot";
+    private static final String CLIENT_PATH = STORAGE_PATH + "/" + CLIENT_DIR;
+    private static final String SYNC_DIR = "sync";
+    private static final String SYNC_PATH = CLIENT_PATH + "/" + SYNC_DIR;
+    private static final String SYNCTHING_CONFIG_PATH = CLIENT_PATH + "/config";
 
     private static final String ASSETS_SYNCTHING = "syncthing";
     private static String syncthing;
@@ -36,20 +39,6 @@ public class Synciot {
     private static final String SERVER_DEFAULT_FOLDER_DEVICE = new StringBuilder()
             .append("        <device id=\"SERVER_DEVICE_ID\"></device>")
             .toString();
-    private static final String SERVER_EXTRA_FOLDER_DEVICE = new StringBuilder()
-            .append("    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"false\">\n")
-            .append("        <device id=\"CLIENT_DEVICE_ID\"></device>\n")
-            .append("        <device id=\"SERVER_DEVICE_ID\"></device>\n")
-            .append("        <minDiskFreePct>1</minDiskFreePct>\n")
-            .append("        <versioning></versioning>\n")
-            .append("        <copiers>0</copiers>\n")
-            .append("        <pullers>0</pullers>\n")
-            .append("        <hashers>0</hashers>\n")
-            .append("        <order>random</order>\n")
-            .append("        <ignoreDelete>false</ignoreDelete>\n")
-            .append("    </folder>")
-            .toString();
-
     private static final String SERVER_DEVICE = new StringBuilder()
             .append("    <device id=\"SERVER_DEVICE_ID\" name=\"Server\" compression=\"metadata\" introducer=\"false\">\n")
             .append("        <address>dynamic</address>\n")
@@ -84,7 +73,6 @@ public class Synciot {
         ShellInterface.runCommand("chmod 755 " + syncthing);
 
         mkdirSync();
-        mkdirSyncTemp();
         generateConfigXml();
 
         device_id = Unix4j.fromFile(CONFIG_XML)
@@ -107,7 +95,6 @@ public class Synciot {
         if (isOriginConfigXml()) {
             sedMisc2ConfigXml();
             sedSync2ConfigXml();
-            sedSyncTemp2ConfigXml();
         }
 
         if (null == syncthingThread) {
@@ -122,25 +109,12 @@ public class Synciot {
         syncthingThread.start();
     }
 
-    private static void sedSyncTemp2ConfigXml() {
-        String server_extra_folder_device = Unix4j.fromString(SERVER_EXTRA_FOLDER_DEVICE)
-                .sed(SedOption.substitute, "FOLDER_ID", device_id)
-                .sed(SedOption.substitute, "FOLDER_PATH", SYNC_TEMP_PATH)
-                .sed(SedOption.substitute, "CLIENT_DEVICE_ID", device_id)
-                .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
-                .toStringResult();
-        Unix4j.fromFile(CONFIG_XML)
-                .sed(SedOption.append, "^    </folder>", server_extra_folder_device)
-                .toFile(CONFIG_XML + ".tmp");
-        ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
-    }
-
     private static void sedSync2ConfigXml() {
         String server_default_folder_device = Unix4j.fromString(SERVER_DEFAULT_FOLDER_DEVICE)
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
-                .sed(SedOption.substitute, "id=\"default\" path=\".*\"", "id=\"" + device_id + "p\" path=\"" + SYNC_PATH + "\"")    // syncthing limit folder id length <= 64, so just "p" here to mean persist storeage
+                .sed(SedOption.substitute, "id=\"default\" path=\".*\"", "id=\"" + device_id + "\" path=\"" + SYNC_PATH + "\"")
                 .sed(SedOption.append, "^        <device id=", server_default_folder_device)
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
@@ -173,32 +147,6 @@ public class Synciot {
         }
     }
 
-    private static void mkdirSyncTemp() {
-        File file = new File(SYNC_TEMP_PATH);
-        if (!file.exists() && !file.isDirectory()) {
-            file.mkdir();
-        }
-
-        file =  new File(SYNC_TEMP_PATH + "/.stfolder");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile("SyncTemp tmpfs");
-            String out = ShellInterface.getProcessOutput("mount");
-            Matcher matcher = RAMFS_PATTERN.matcher(out);
-            if (!matcher.find()) {
-                ShellInterface.runCommand("mount -t tmpfs -o mode=0777 none " + SYNC_TEMP_PATH + "/");
-                ShellInterface.runCommand("touch " + SYNC_TEMP_PATH + "/.stfolder");
-            }
-        }
-    }
-
     private static void mkdirSync() {
         File file = new File(SYNC_PATH);
         if (!file.exists() && !file.isDirectory()) {
@@ -211,6 +159,16 @@ public class Synciot {
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+
+        if (ShellInterface.isSuAvailable()) {
+            Pattern RAMFS_PATTERN = Pattern.compile(CLIENT_DIR + "/" + SYNC_DIR + " tmpfs");
+            String out = ShellInterface.getProcessOutput("mount");
+            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            if (!matcher.find()) {
+                ShellInterface.runCommand("mount -t tmpfs -o mode=0777 none " + SYNC_PATH + "/");
+                ShellInterface.runCommand("touch " + SYNC_PATH + "/.stfolder");
             }
         }
     }

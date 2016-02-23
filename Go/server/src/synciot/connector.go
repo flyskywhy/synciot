@@ -75,7 +75,7 @@ func setSyncthingFolderDevice(syncDir, xmlPath, id string) error {
 	os.MkdirAll(folderPath, 0775)
 	os.Create(filepath.FromSlash(folderPath + "/.stfolder"))
 
-	folderDevice := strings.Join(CLIENT_EXTRA_FOLDER_DEVICE, "")
+	folderDevice := strings.Join(CLIENT_FOLDER_DEVICE, "")
 	folderDevice = strings.Replace(folderDevice, "FOLDER_ID", id, -1)
 	folderDevice = strings.Replace(folderDevice, "FOLDER_PATH", folderPath, -1)
 	folderDevice = strings.Replace(folderDevice, "SERVER_DEVICE_ID", getSyncthingMyId(xmlPath), -1)
