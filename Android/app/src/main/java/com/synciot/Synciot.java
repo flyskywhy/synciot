@@ -22,7 +22,6 @@ public class Synciot {
     private static Context CallerCtx;
 
     private static String dataPath;
-    private static final String ORIGIN_SYNC_PATH = "/data/Sync";
     private static final String SYNC_PATH = "/sdcard/synciot/sync";
     private static final String SYNC_TEMP_PATH = "/sdcard/synciot/sync-temp";
     private static final String SYNCTHING_CONFIG_PATH = "/sdcard/synciot/config";
@@ -160,7 +159,7 @@ public class Synciot {
 
     private static boolean isOriginConfigXml() {
         final String count = Unix4j.fromFile(CONFIG_XML)
-                .grep(GrepOption.count, "\"" + ORIGIN_SYNC_PATH + "\"")
+                .grep(GrepOption.count, "id=\"default\"")
                 .toStringResult();
         return !("0".equals(count));
     }
