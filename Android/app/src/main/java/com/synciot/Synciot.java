@@ -79,8 +79,10 @@ public class Synciot {
         File file = new File(syncthing);
         if (!file.exists()) {
             extractAssets(CallerCtx, ASSETS_SYNCTHING, syncthing);
-            ShellInterface.runCommand("chmod 755 " + syncthing);
         }
+        // To avoid extractAssets() before install Superuser, so we always chmod here,
+        // not just after extractAssets() and never chmod.
+        ShellInterface.runCommand("chmod 755 " + syncthing);
 
         mkdirSync();
         mkdirSyncTemp();
