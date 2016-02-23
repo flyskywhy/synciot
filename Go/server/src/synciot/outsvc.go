@@ -10,8 +10,8 @@ import (
 	"github.com/evalgo/evos"
 )
 
-// The out service runs a loop for discovery of ${Synciot}/sync/${Client}-temp/${DateTime}/out.*.synciot
-// and move to ${Synciot}/io/user${userIdNum}/out/${Client}-temp/${DateTime}/.
+// The out service runs a loop for discovery of ${Synciot}/sync/${Client}/${DateTime}/out.*.synciot
+// and move to ${Synciot}/io/user${userIdNum}/out/${Client}/${DateTime}/.
 type outSvc struct {
 	syncDir string
 	ioDir   string
@@ -35,11 +35,11 @@ func (s *outSvc) Serve() {
 				name := filepath.Base(file)
 				i := strings.IndexRune(name, '.')
 				userIdNum := name[len(OUT_DIR):i]
-				syncDateDir := filepath.Dir(file)
-				dateTimeDirBase := filepath.Base(syncDateDir)
-				clientTempDir := filepath.Dir(syncDateDir)
-				clientTempDirBase := filepath.Base(clientTempDir)
-				ioDateDir := filepath.FromSlash(s.ioDir + "/user" + userIdNum + "/" + OUT_DIR + "/" + clientTempDirBase + "/" + dateTimeDirBase)
+				syncDateDir := filepath.Dir(file)             // ${Synciot}/sync/${Client}/${DateTime}/
+				dateTimeDirBase := filepath.Base(syncDateDir) // ${DateTime}
+				clientDir := filepath.Dir(syncDateDir)        // ${Synciot}/sync/${Client}/
+				clientDirBase := filepath.Base(clientDir)     // ${Client}
+				ioDateDir := filepath.FromSlash(s.ioDir + "/user" + userIdNum + "/" + OUT_DIR + "/" + clientDirBase + "/" + dateTimeDirBase)
 
 				evos.MoveFolder(syncDateDir, ioDateDir)
 			}

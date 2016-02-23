@@ -183,6 +183,26 @@ func getSyncthingDeviceIdShort(id string) string {
 	return reg.ReplaceAllString(id, "")
 }
 
+func getClients(serverPath string) []ClientConfiguration {
+	var client ClientConfiguration
+	var clients []ClientConfiguration
+
+	dir, err := ioutil.ReadDir(filepath.FromSlash(serverPath + "/" + SYNC_DIR))
+	if err == nil {
+		for _, fi := range dir {
+			if fi.IsDir() {
+				client.ID = fi.Name()
+				client.Name = client.ID
+				clients = append(clients, client)
+			}
+		}
+	} else {
+		fmt.Println("Error: ioutil.ReadDir() failed in getClients()")
+	}
+
+	return clients
+}
+
 func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 	qs := r.URL.Query()
 	server := qs.Get("server")
@@ -191,22 +211,30 @@ func (s *apiSvc) getClientConfig(w http.ResponseWriter, r *http.Request) {
 	if s.cfg != nil && s.cfg.Servers != nil {
 		for _, rf := range s.cfg.Servers {
 			if rf.ID == server {
-				xmlDir := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR)
-				xmlPath := filepath.FromSlash(xmlDir + "/config.xml")
-				_, err := os.Stat(xmlPath)
+				var cfg UserConfiguration
+
+				// Replace getClients() with inline code for more efficient
+				//cfg.Clients = getClients(rf.Path)
+
+				var client ClientConfiguration
+
+				dir, err := ioutil.ReadDir(filepath.FromSlash(rf.Path + "/" + SYNC_DIR))
 				if err == nil {
-					var cfg UserConfiguration
-					cfg.Clients = getSyncthingRemoteDevices(xmlPath)
-
-					w.Header().Set("Content-Type", "application/json; charset=utf-8")
-					json.NewEncoder(w).Encode(cfg)
-
-					return
+					for _, fi := range dir {
+						if fi.IsDir() {
+							client.ID = fi.Name()
+							client.Name = client.ID
+							cfg.Clients = append(cfg.Clients, client)
+						}
+					}
 				} else {
-					fmt.Println(err)
-					http.Error(w, err.Error(), 500)
-					return
+					fmt.Println("Error: ioutil.ReadDir() failed in getClientConfig()")
 				}
+
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				json.NewEncoder(w).Encode(cfg)
+
+				return
 			}
 		}
 	}
@@ -227,7 +255,7 @@ func (s *apiSvc) clientSummary(serverId, clientId, userIdNum string) map[string]
 	if s.cfg != nil && s.cfg.Servers != nil {
 		for _, rf := range s.cfg.Servers {
 			if rf.ID == serverId {
-				syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+				syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + clientId + "/" + IN_DIR)
 
 				_, err := os.Stat(syncInDir)
 				if err == nil {
@@ -236,7 +264,7 @@ func (s *apiSvc) clientSummary(serverId, clientId, userIdNum string) map[string]
 					res["state"] = "idle"
 				}
 
-				outDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + OUT_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/")
+				outDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + OUT_DIR + "/" + clientId)
 				res["out"] = CountDirs(outDir)
 
 				return res
@@ -578,7 +606,6 @@ func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result [
 		for _, rf := range s.cfg.Servers {
 			if rf.ID == serverId {
 				inDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + IN_DIR)
-				xmlPath := filepath.FromSlash(rf.Path + "/" + SYNCTHING_CONFIG_DIR + "/config.xml")
 				os.MkdirAll(inDir, 0775)
 
 				if startStop == "start" {
@@ -589,15 +616,28 @@ func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result [
 				}
 
 				if len(result) == 0 {
-					for _, client := range getSyncthingRemoteDevices(xmlPath) {
-						syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(client.ID) + "-temp/" + IN_DIR)
-						evos.CopyFolder(inDir, syncInDir)
+					// Replace getClients() with inline code for more efficient
+					//for _, clientId := range getClients(rf.Path) {
+					//	syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + clientId + "/" + IN_DIR)
+					//	evos.CopyFolder(inDir, syncInDir)
+					//}
+
+					dir, err := ioutil.ReadDir(filepath.FromSlash(rf.Path + "/" + SYNC_DIR))
+					if err == nil {
+						for _, fi := range dir {
+							if fi.IsDir() {
+								syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + fi.Name() + "/" + IN_DIR)
+								evos.CopyFolder(inDir, syncInDir)
+							}
+						}
+					} else {
+						fmt.Println("Error: ioutil.ReadDir() failed in startStopClient()")
 					}
 				} else {
 					var clientIds []string
 					json.Unmarshal(result, &clientIds)
 					for _, clientId := range clientIds {
-						syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + getSyncthingDeviceIdShort(clientId) + "-temp/" + IN_DIR)
+						syncInDir := filepath.FromSlash(rf.Path + "/" + SYNC_DIR + "/" + clientId + "/" + IN_DIR)
 						evos.CopyFolder(inDir, syncInDir)
 					}
 				}

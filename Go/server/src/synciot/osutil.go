@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -170,4 +171,25 @@ func StringsInsert(origin, sep, insert string) string {
 	buffer.WriteString(s[1])
 
 	return buffer.String()
+}
+
+// AvailableNextSubfolderNameInFolder return a number in string that can be safely made as new folder name later
+func AvailableNextSubfolderNameInFolder(folder string) string {
+	max := 0
+
+	dir, err := ioutil.ReadDir(folder)
+	if err == nil {
+		for _, fi := range dir {
+			if fi.IsDir() {
+				i, err := strconv.Atoi(fi.Name())
+				if err == nil {
+					if i > max {
+						max = i
+					}
+				}
+			}
+		}
+	}
+
+	return strconv.Itoa(max + 1)
 }

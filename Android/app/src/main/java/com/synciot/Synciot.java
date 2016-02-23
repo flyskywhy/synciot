@@ -123,7 +123,7 @@ public class Synciot {
 
     private static void sedSyncTemp2ConfigXml() {
         String server_extra_folder_device = Unix4j.fromString(SERVER_EXTRA_FOLDER_DEVICE)
-                .sed(SedOption.substitute, "FOLDER_ID", device_id_short + "-Temp")
+                .sed(SedOption.substitute, "FOLDER_ID", device_id)
                 .sed(SedOption.substitute, "FOLDER_PATH", SYNC_TEMP_PATH)
                 .sed(SedOption.substitute, "CLIENT_DEVICE_ID", device_id)
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
@@ -139,7 +139,7 @@ public class Synciot {
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
-                .sed(SedOption.substitute, "id=\"default\" path=\"" + ORIGIN_SYNC_PATH + "\"", "id=\"" + device_id_short + "\" path=\"" + SYNC_PATH + "\"")
+                .sed(SedOption.substitute, "id=\"default\" path=\".*\"", "id=\"" + device_id + "p\" path=\"" + SYNC_PATH + "\"")    // syncthing limit folder id length <= 64, so just "p" here to mean persist storeage
                 .sed(SedOption.append, "^        <device id=", server_default_folder_device)
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
@@ -150,7 +150,6 @@ public class Synciot {
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
-                .sed(SedOption.substitute, "localhost", device_id_short)
                 .sed(SedOption.append, "^    </device>", server_device)
                 .sed("s/urAccepted>0/urAccepted>-1/")
                 .toFile(CONFIG_XML + ".tmp");

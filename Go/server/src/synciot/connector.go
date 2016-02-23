@@ -70,13 +70,13 @@ func setSyncthingFolderDevice(syncDir, xmlPath, id string) error {
 	buf, _ := ioutil.ReadFile(xmlPath)
 	xml := string(buf)
 
-	shortId := getSyncthingDeviceIdShort(id)
-	folderPath := filepath.FromSlash(syncDir + "/" + shortId + "-temp")
+	clientName := AvailableNextSubfolderNameInFolder(syncDir)
+	folderPath := filepath.FromSlash(syncDir + "/" + clientName)
 	os.MkdirAll(folderPath, 0775)
 	os.Create(filepath.FromSlash(folderPath + "/.stfolder"))
 
 	folderDevice := strings.Join(CLIENT_EXTRA_FOLDER_DEVICE, "")
-	folderDevice = strings.Replace(folderDevice, "FOLDER_ID", shortId+"-Temp", -1)
+	folderDevice = strings.Replace(folderDevice, "FOLDER_ID", id, -1)
 	folderDevice = strings.Replace(folderDevice, "FOLDER_PATH", folderPath, -1)
 	folderDevice = strings.Replace(folderDevice, "SERVER_DEVICE_ID", getSyncthingMyId(xmlPath), -1)
 	folderDevice = strings.Replace(folderDevice, "CLIENT_DEVICE_ID", id, -1)
@@ -85,7 +85,7 @@ func setSyncthingFolderDevice(syncDir, xmlPath, id string) error {
 
 	device := strings.Join(CLIENT_DEVICE, "")
 	device = strings.Replace(device, "CLIENT_DEVICE_ID", id, -1)
-	device = strings.Replace(device, "CLIENT_DEVICE_NAME", shortId, -1)
+	device = strings.Replace(device, "CLIENT_DEVICE_NAME", clientName, -1)
 
 	xml = StringsInsert(xml, "    </device>\n", device)
 
