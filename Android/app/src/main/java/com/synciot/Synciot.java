@@ -153,6 +153,7 @@ public class Synciot {
         Unix4j.fromFile(CONFIG_XML)
                 .sed(SedOption.append, "^    </device>", server_device)
                 .sed("s/urAccepted>0/urAccepted>-1/")
+                .sed("s/autoUpgradeIntervalH>12/autoUpgradeIntervalH>0/")
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
     }
