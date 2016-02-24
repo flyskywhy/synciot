@@ -47,7 +47,6 @@ public class Synciot {
 
     private static String device_id;
     private static String device_id_short;
-    private static Thread syncthingThread;
 
     public static String getDevice_id() {
         return device_id;
@@ -97,15 +96,28 @@ public class Synciot {
             sedSync2ConfigXml();
         }
 
-        if (null == syncthingThread) {
-            syncthingThread = new Thread(new Runnable() {
+        Pattern pattern = Pattern.compile(syncthing);
+        String out = ShellInterface.getProcessOutput("ps syncthing");
+        Matcher matcher = pattern.matcher(out);
+        if (!matcher.find()) {
+            new Thread(new Runnable() {
                 public void run() {
                     ShellInterface.runCommand(syncthing
                             + " -no-browser -no-restart -gui-address=0.0.0.0:8384 -home="
                             + SYNCTHING_CONFIG_PATH + "/");
                 }
-            });
-            syncthingThread.start();
+            }).start();
+        }
+    }
+
+    public static void stopSyncthing() {
+        Pattern pattern = Pattern.compile(syncthing);
+        String out = ShellInterface.getProcessOutput("ps syncthing");
+        Matcher matcher = pattern.matcher(out);
+        if (matcher.find()) {
+            String[] ps = out.replaceAll("USER.*root", "").split(" +");
+            String pid = ps[1];
+            ShellInterface.runCommand("kill " + pid);
         }
     }
 
