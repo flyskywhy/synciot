@@ -27,13 +27,13 @@ public class Synciot {
     private static final String CLIENT_PATH = STORAGE_PATH + "/" + CLIENT_DIR;
     private static final String SYNC_DIR = "sync";
     private static final String SYNC_PATH = CLIENT_PATH + "/" + SYNC_DIR;
-    private static final String SYNCTHING_CONFIG_PATH = CLIENT_PATH + "/config";
+    private static final String CONFIG_PATH = CLIENT_PATH + "/config";
 
     private static final String ASSETS_SYNCTHING = "syncthing";
     private static String syncthing;
     private static final String ASSETS_SERVER_DEVICE_ID_TXT = "server_device_id.txt";
-    private static final String SERVER_DEVICE_ID_TXT = SYNCTHING_CONFIG_PATH + "/" + ASSETS_SERVER_DEVICE_ID_TXT;
-    private static final String CONFIG_XML = SYNCTHING_CONFIG_PATH + "/config.xml";
+    private static final String SERVER_DEVICE_ID_TXT = CONFIG_PATH + "/" + ASSETS_SERVER_DEVICE_ID_TXT;
+    private static final String CONFIG_XML = CONFIG_PATH + "/config.xml";
 
     private static String server_device_id;
     private static final String SERVER_DEFAULT_FOLDER_DEVICE = new StringBuilder()
@@ -104,7 +104,7 @@ public class Synciot {
                 public void run() {
                     ShellInterface.runCommand(syncthing
                             + " -no-browser -no-restart -gui-address=0.0.0.0:8384 -home="
-                            + SYNCTHING_CONFIG_PATH + "/");
+                            + CONFIG_PATH);
                 }
             }).start();
         }
@@ -154,8 +154,8 @@ public class Synciot {
     private static void generateConfigXml() {
         File file = new File(CONFIG_XML);
         if (!file.exists()) {
-            ShellInterface.runCommand("mkdir -p " + SYNCTHING_CONFIG_PATH + "/");
-            ShellInterface.runCommand(syncthing + " -generate=" + SYNCTHING_CONFIG_PATH + "/");
+            ShellInterface.runCommand("mkdir -p " + CONFIG_PATH);
+            ShellInterface.runCommand(syncthing + " -generate=" + CONFIG_PATH);
         }
     }
 
@@ -167,11 +167,11 @@ public class Synciot {
         }
 
         if (ShellInterface.isSuAvailable()) {
-            Pattern RAMFS_PATTERN = Pattern.compile(CLIENT_DIR + "/" + SYNC_DIR + " tmpfs");
+            Pattern pattern = Pattern.compile(CLIENT_DIR + "/" + SYNC_DIR + " tmpfs");
             String out = ShellInterface.getProcessOutput("mount");
-            Matcher matcher = RAMFS_PATTERN.matcher(out);
+            Matcher matcher = pattern.matcher(out);
             if (!matcher.find()) {
-                ShellInterface.runCommand("mount -t tmpfs -o mode=0777 none " + SYNC_PATH + "/");
+                ShellInterface.runCommand("mount -t tmpfs -o mode=0777 none " + SYNC_PATH);
                 ShellInterface.runCommand("touch " + SYNC_PATH + "/.stfolder");
             }
         }
