@@ -160,18 +160,10 @@ public class Synciot {
     }
 
     private static void mkdirSync() {
-        File file = new File(SYNC_PATH);
-        if (!file.exists() && !file.isDirectory()) {
-            file.mkdir();
-        }
-
-        file =  new File(SYNC_PATH + "/.stfolder");
+        File file =  new File(SYNC_PATH + "/.stfolder");
         if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            ShellInterface.runCommand("mkdir -p " + SYNC_PATH);
+            ShellInterface.runCommand("touch " + SYNC_PATH + "/.stfolder");
         }
 
         if (ShellInterface.isSuAvailable()) {
