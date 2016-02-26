@@ -233,7 +233,7 @@ public class Synciot {
     }
 
     private static void mkdirSync() {
-        File file =  new File(SYNC_PATH + "/.stfolder");
+        File file = new File(SYNC_PATH + "/.stfolder");
         if (!file.exists()) {
             ShellInterface.runCommand("mkdir -p " + SYNC_PATH);
             ShellInterface.runCommand("touch " + SYNC_PATH + "/.stfolder");
