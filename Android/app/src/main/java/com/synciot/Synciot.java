@@ -2,6 +2,7 @@ package com.synciot;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.Log;
 
 import org.unix4j.Unix4j;
 import org.unix4j.unix.grep.GrepOption;
@@ -11,6 +12,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +21,7 @@ import java.util.regex.Pattern;
  * Created by lizheng on 15-11-4.
  */
 public class Synciot {
+    private static final String TAG = "Synciot";
 
     private static Context CallerCtx;
 
@@ -28,6 +32,7 @@ public class Synciot {
     private static final String SYNC_DIR = "sync";
     private static final String SYNC_PATH = CLIENT_PATH + "/" + SYNC_DIR;
     private static final String CONFIG_PATH = CLIENT_PATH + "/config";
+    private static final String IN_PATH = SYNC_PATH + "/in";
 
     private static final String ASSETS_SYNCTHING = "syncthing";
     private static String syncthing;
@@ -45,8 +50,12 @@ public class Synciot {
             .append("    </device>")
             .toString();
 
+    private static final String suffix = ".synciot".toUpperCase();
+    private static final String prefixSyncthing = ".syncthing".toUpperCase();
+
     private static String device_id;
     private static String device_id_short;
+    private static boolean runningBusiness = false;
 
     public static String getDevice_id() {
         return device_id;
@@ -56,7 +65,17 @@ public class Synciot {
         return device_id_short;
     }
 
-    public static void startSyncthing(Context ctx) {
+    public static void start(Context ctx) {
+        startSyncthing(ctx);
+        startBusiness();
+    }
+
+    public static void stop() {
+        stopBusiness();
+        stopSyncthing();
+    }
+
+    private static void startSyncthing(Context ctx) {
         // To get root at the very beginning
         ShellInterface.isSuAvailable();
 
@@ -110,7 +129,7 @@ public class Synciot {
         }
     }
 
-    public static void stopSyncthing() {
+    private static void stopSyncthing() {
         Pattern pattern = Pattern.compile(syncthing);
         String out = ShellInterface.getProcessOutput("ps syncthing");
         Matcher matcher = pattern.matcher(out);
@@ -119,6 +138,60 @@ public class Synciot {
             String pid = ps[1];
             ShellInterface.runCommand("kill " + pid);
         }
+    }
+
+    private static void startBusiness() {
+        if (!runningBusiness) {
+            new Thread(new Runnable() {
+                public void run() {
+                    runningBusiness = true;
+
+                    for (; ; ) {
+                        if (!runningBusiness) {
+                            return;
+                        }
+
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        File dir = new File(IN_PATH);
+                        if (dir.exists() && dir.isDirectory()) {
+                            String[] child = dir.list();
+                            if (child != null) {
+                                for (int i = 0; i < child.length; i++) {
+                                    String fileName = child[i];
+
+                                    Pattern pattern = Pattern.compile(suffix);
+                                    Matcher matcher = pattern.matcher(fileName.toUpperCase());
+                                    if (matcher.find()) {
+                                        pattern = Pattern.compile(prefixSyncthing);
+                                        matcher = pattern.matcher(fileName.toUpperCase());
+                                        if (!matcher.find()) {
+                                            SimpleDateFormat time = new SimpleDateFormat("yyyyMMddHHmmss");
+                                            String outPath = SYNC_PATH + "/" + time.format(new Date());
+                                            ShellInterface.runCommand("mkdir -p " + outPath);
+
+                                            Business.main(fileName, IN_PATH, outPath);
+
+                                            ShellInterface.runCommand("mv " + IN_PATH + " " + outPath + "/");
+
+                                            Log.d(TAG, outPath);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }).start();
+        }
+    }
+
+    private static void stopBusiness() {
+        runningBusiness = false;
     }
 
     private static void sedSync2ConfigXml() {
