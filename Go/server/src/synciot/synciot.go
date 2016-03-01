@@ -43,7 +43,7 @@ var (
 	quitChan chan os.Signal
 
 	CLIENT_FOLDER_DEVICE = []string{
-		"    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"false\">\n",
+		"    <folder id=\"FOLDER_ID\" path=\"FOLDER_PATH/\" ro=\"false\" rescanIntervalS=\"60\" ignorePerms=\"false\" autoNormalize=\"true\">\n",
 		"        <device id=\"SERVER_DEVICE_ID\"></device>\n",
 		"        <device id=\"CLIENT_DEVICE_ID\"></device>\n",
 		"        <minDiskFreePct>1</minDiskFreePct>\n",
@@ -53,6 +53,11 @@ var (
 		"        <hashers>0</hashers>\n",
 		"        <order>random</order>\n",
 		"        <ignoreDelete>false</ignoreDelete>\n",
+		"        <scanProgressIntervalS>0</scanProgressIntervalS>\n",
+		"        <pullerSleepS>0</pullerSleepS>\n",
+		"        <pullerPauseS>0</pullerPauseS>\n",
+		"        <maxConflicts>-1</maxConflicts>\n",
+		"        <disableSparseFiles>false</disableSparseFiles>\n",
 		"    </folder>\n",
 	}
 

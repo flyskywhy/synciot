@@ -378,7 +378,7 @@ func getSyncthingProtocolPort(xmlPath string) string {
 	buf, _ := ioutil.ReadFile(xmlPath)
 	reg := regexp.MustCompile(".*<listenAddress>.*")
 	addr := string(reg.Find(buf))
-	reg = regexp.MustCompile(".*<listenAddress>.*:|</listenAddress>.*")
+	reg = regexp.MustCompile(".*<listenAddress>.*://.*:|</listenAddress>.*")
 	port = reg.ReplaceAllString(addr, "")
 
 	return port
@@ -423,7 +423,7 @@ func setSyncthingFolderConnector(synciotDir string) {
 
 	buf, _ := ioutil.ReadFile(xmlPath)
 	reg := regexp.MustCompile("id=\"default\" path=\".*\" ro=")
-	buf = reg.ReplaceAll(buf, []byte("id=\"connector\" path=\""+synciotDir+string(filepath.Separator)+"connector\" ro="))
+	buf = reg.ReplaceAll(buf, []byte("id=\"connector\" path=\""+synciotDir+string(filepath.Separator)+"connector/\" ro="))
 	ioutil.WriteFile(xmlPath, buf, 0644)
 }
 

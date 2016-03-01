@@ -223,7 +223,7 @@ public class Synciot {
                 .sed(SedOption.substitute, "SERVER_DEVICE_ID", server_device_id)
                 .toStringResult();
         Unix4j.fromFile(CONFIG_XML)
-                .sed(SedOption.substitute, "id=\"default\" path=\".*\"", "id=\"" + device_id + "\" path=\"" + SYNC_PATH + "\"")
+                .sed(SedOption.substitute, "id=\"default\" path=\".*\"", "id=\"" + device_id + "\" path=\"" + SYNC_PATH + "/\"")
                 .sed(SedOption.append, "^        <device id=", server_default_folder_device)
                 .toFile(CONFIG_XML + ".tmp");
         ShellInterface.runCommand("mv " + CONFIG_XML + ".tmp " + CONFIG_XML);
