@@ -600,7 +600,7 @@ func (s *apiSvc) getSystemStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result []byte) {
+func (s *apiSvc) inClient(cmd, serverId, userIdNum string, result []byte) {
 	s.fillCfgFromFile()
 	if s.cfg != nil && s.cfg.Servers != nil {
 		for _, rf := range s.cfg.Servers {
@@ -608,12 +608,8 @@ func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result [
 				inDir := filepath.FromSlash(rf.Path + "/" + IO_DIR + "/user" + userIdNum + "/" + IN_DIR)
 				os.MkdirAll(inDir, 0775)
 
-				if startStop == "start" {
-					fc := CountFiles(inDir)
-					os.Create(filepath.FromSlash(inDir + "/start" + userIdNum + "." + strconv.Itoa(fc) + ".synciot"))
-				} else {
-					os.Create(filepath.FromSlash(inDir + "/stop" + userIdNum + ".synciot"))
-				}
+				fc := CountFiles(inDir)
+				os.Create(filepath.FromSlash(inDir + "/user" + userIdNum + "." + strconv.Itoa(fc) + "." + cmd + ".synciot"))
 
 				if len(result) == 0 {
 					// Replace getClients() with inline code for more efficient
@@ -631,7 +627,7 @@ func (s *apiSvc) startStopClient(startStop, serverId, userIdNum string, result [
 							}
 						}
 					} else {
-						fmt.Println("Error: ioutil.ReadDir() failed in startStopClient()")
+						fmt.Println("Error: ioutil.ReadDir() failed in inClient()")
 					}
 				} else {
 					var clientIds []string
@@ -656,7 +652,7 @@ func (s *apiSvc) postStartClient(w http.ResponseWriter, r *http.Request) {
 	result, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
-	s.startStopClient("start", serverId, userIdNum, result)
+	s.inClient("start", serverId, userIdNum, result)
 }
 
 func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
@@ -666,7 +662,7 @@ func (s *apiSvc) postStopClient(w http.ResponseWriter, r *http.Request) {
 	result, _ := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 
-	s.startStopClient("stop", serverId, userIdNum, result)
+	s.inClient("stop", serverId, userIdNum, result)
 }
 
 type embeddedStatic struct {

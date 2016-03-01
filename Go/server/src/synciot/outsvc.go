@@ -10,7 +10,7 @@ import (
 	"github.com/evalgo/evos"
 )
 
-// The out service runs a loop for discovery of ${Synciot}/sync/${Client}/${DateTime}/out.*.synciot
+// The out service runs a loop for discovery of ${Synciot}/sync/${Client}/${DateTime}/out*.*.synciot
 // and move to ${Synciot}/io/user${userIdNum}/out/${Client}/${DateTime}/.
 type outSvc struct {
 	syncDir string
@@ -73,7 +73,7 @@ func (s *outSvc) listenForMove() []string {
 				i := strings.IndexRune(name, '.')
 				count, _ := strconv.Atoi(name[i+1 : len(name)-len(suffix)])
 				folder := filepath.Dir(filename)
-				if count == CountFiles(folder)-1 { // out*.synciot itself was not counted by client, so `-1` here
+				if count == CountFiles(folder)-1 { // out*.*.synciot itself was not counted by client, so `-1` here
 					outFiles = append(outFiles, filename)
 				}
 			}

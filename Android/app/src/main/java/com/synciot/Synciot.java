@@ -50,8 +50,8 @@ public class Synciot {
             .append("    </device>")
             .toString();
 
+    private static final String prefix = "user".toUpperCase();
     private static final String suffix = ".synciot".toUpperCase();
-    private static final String prefixSyncthing = ".syncthing".toUpperCase();
 
     private static String device_id;
     private static String device_id_short;
@@ -164,21 +164,30 @@ public class Synciot {
                                 for (int i = 0; i < child.length; i++) {
                                     String fileName = child[i];
 
-                                    Pattern pattern = Pattern.compile(suffix);
-                                    Matcher matcher = pattern.matcher(fileName.toUpperCase());
-                                    if (matcher.find()) {
-                                        pattern = Pattern.compile(prefixSyncthing);
-                                        matcher = pattern.matcher(fileName.toUpperCase());
-                                        if (!matcher.find()) {
-                                            SimpleDateFormat time = new SimpleDateFormat("yyyyMMddHHmmss");
-                                            String outPath = SYNC_PATH + "/" + time.format(new Date());
-                                            ShellInterface.runCommand("mkdir -p " + outPath);
+                                    if (fileName.toUpperCase().startsWith(prefix)) {
+                                        if (fileName.toUpperCase().endsWith(suffix)) {
+                                            int p1 = fileName.indexOf(".");
+                                            int p2 = fileName.indexOf(".", p1 + 1);
+                                            int p3 = fileName.indexOf(".", p2 + 1);
 
-                                            Business.main(fileName, IN_PATH, outPath);
+                                            int inCount = Integer.parseInt(fileName.substring(p1 + 1, p2));
+                                            if (inCount == (countFiles(dir) - 1)) { // user*.*.*.synciot itself was not counted by server, so `-1` here
+                                                String userIdNum = fileName.substring(prefix.length(), p1);
 
-                                            ShellInterface.runCommand("mv " + IN_PATH + " " + outPath + "/");
+                                                String cmd = fileName.substring(p2 + 1, p3);
 
-                                            Log.d(TAG, outPath);
+                                                SimpleDateFormat time = new SimpleDateFormat("yyyyMMddHHmmss");
+                                                String outPath = SYNC_PATH + "/" + time.format(new Date());
+                                                ShellInterface.runCommand("mkdir -p " + outPath);
+
+                                                Business.main(cmd, IN_PATH, outPath);
+
+                                                ShellInterface.runCommand("mv " + IN_PATH + " " + outPath + "/");
+                                                String outCount = String.valueOf(countFiles(new File(outPath)));
+                                                ShellInterface.runCommand("touch " + outPath + "/out" + userIdNum + "." + outCount + ".synciot");
+
+                                                Log.d(TAG, outPath);
+                                            }
                                         }
                                     }
                                 }
@@ -192,6 +201,21 @@ public class Synciot {
 
     private static void stopBusiness() {
         runningBusiness = false;
+    }
+
+    private static int countFiles(java.io.File file) {
+        int count = 0;
+        java.io.File[] fileList = file.listFiles();
+        for (int i = 0; i < fileList.length; i++) {
+            if (fileList[i].isDirectory()) {
+                count = count + countFiles(fileList[i]);
+            } else {
+                if (!fileList[i].getName().toLowerCase().startsWith(".syncthing.")) { // this synciot project hack ".syncthing." specially here
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private static void sedSync2ConfigXml() {
