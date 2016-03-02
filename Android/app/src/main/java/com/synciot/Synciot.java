@@ -140,6 +140,18 @@ public class Synciot {
         }
     }
 
+    public static void restartSyncthing() {
+        stopSyncthing();
+
+        new Thread(new Runnable() {
+            public void run() {
+                ShellInterface.runCommand(syncthing
+                        + " -no-browser -no-restart -gui-address=0.0.0.0:8384 -home="
+                        + CONFIG_PATH);
+            }
+        }).start();
+    }
+
     private static void startBusiness() {
         if (!runningBusiness) {
             new Thread(new Runnable() {
@@ -187,6 +199,8 @@ public class Synciot {
                                                 ShellInterface.runCommand("touch " + outPath + "/out" + userIdNum + "." + outCount + ".synciot");
 
                                                 Log.d(TAG, outPath);
+
+                                                restartSyncthing(); // Hack here to ensure sync from client to server. Still do not know why only synced at the beginning of syncthing running.
                                             }
                                         }
                                     }
